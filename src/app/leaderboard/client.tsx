@@ -1,21 +1,26 @@
 "use client";
 
-import { ChevronLeftIcon, EarthIcon } from "lucide-react";
+import {
+  CheckIcon,
+  ChevronLeftIcon,
+  EarthIcon,
+  SearchIcon,
+  UsersIcon,
+} from "lucide-react";
 import { redirect } from "next/navigation";
+import { Fragment, useEffect, useState } from "react";
+import StatCard from "~/components/stat-card";
+import { Badge } from "~/components/ui/badge";
+import { Button } from "~/components/ui/button";
+import { Card, CardContent } from "~/components/ui/card";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "~/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "~/components/ui/select";
+  CommandDialog,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "~/components/ui/command";
 import {
   Table,
   TableBody,
@@ -24,31 +29,64 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/table";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import type { Session } from "~/lib/auth-client";
+import type {
+  getActiveClasses,
+  getClassAverage,
+  getClassRankings,
+  getStudentClassAnonymity,
+  getStudentClassRanking,
+} from "~/server/queries";
+import { toggleAnonymous } from "./actions";
+import { tryCatch } from "~/server/helpers";
+import { toast } from "sonner";
 
-const stats = [
-  {
-    title: "Your Global Rank",
-    description: "Among all students",
-    value: "#11",
-    icon: EarthIcon,
-    iconColor: "stroke-green-500",
-  },
-];
+export default function Leaderboard({
+  activeClasses,
+  classCode,
+  classRankings,
+  studentClassRanking,
+  classAverage,
+  isAnonymous,
+}: {
+  session: Session;
+  activeClasses: Awaited<ReturnType<typeof getActiveClasses>>;
+  classCode: string | null;
+  classRankings: Awaited<ReturnType<typeof getClassRankings>>;
+  studentClassRanking: Awaited<ReturnType<typeof getStudentClassRanking>>;
+  classAverage: Awaited<ReturnType<typeof getClassAverage>> | null;
+  isAnonymous: Awaited<ReturnType<typeof getStudentClassAnonymity>>;
+}) {
+  const [isSettingAnonymous, setIsSettingAnonymous] = useState<boolean>(false);
+  const [searchOpen, setSearchOpen] = useState<boolean>(false);
 
-const classes = [
-  { value: "advancedfunctions", label: "Advanced Functions" },
-  { value: "english", label: "English" },
-  { value: "french", label: "French" },
-  { value: "compsci", label: "Computer Science" },
-];
+  async function handleToggleAnonymity() {
+    if (classCode === null) {
+      toast.error(
+        "You must specify a class code to toggle anonymity for that class.",
+      );
+      return;
+    }
 
-const leaderboardData = [
-  { rank: "1", studentId: "348617341", grade: "81.1%", courses: "5" },
-];
+    setIsSettingAnonymous(true);
+    const { error, data } = await tryCatch(toggleAnonymous(classCode));
+    if (error) {
+      toast.error(error.message);
+    } else {
+      if (data?.isAnonymous) {
+        toast.success("Your student ID is private.");
+      } else {
+        toast.success("Your student ID is public.");
+      }
+    }
 
-export default function Leaderboard({  }: { session: Session }) {
+    setIsSettingAnonymous(false);
+  }
+
+  useEffect(() => {
+    console.log(isAnonymous);
+  }, [isAnonymous]);
+
   return (
     <main className="container py-12">
       <p
@@ -59,96 +97,166 @@ export default function Leaderboard({  }: { session: Session }) {
       </p>
       <div className="mb-8 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex flex-col gap-2">
-          <h1 className="text-4xl font-semibold tracking-tight">Student Leaderboard</h1>
-          <p className="text-muted-foreground">See how you compare to other anonymized students</p>
+          <h1 className="text-4xl font-semibold tracking-tight">
+            Student Leaderboard
+          </h1>
+          <p className="text-muted-foreground">
+            See how you compare to other students
+          </p>
         </div>
-      </div>
-      <div className="mb-20 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
-        {stats.map((stat, index) => (
-          <Card key={index} className="gap-2 py-4 pb-6">
-            <CardHeader>
-              <CardTitle className="flex flex-1 items-center justify-between text-lg tracking-tight">
-                {stat.title}
-                <stat.icon className={`bg-muted h-8 w-8 rounded-full p-1.5 text-white ${stat.iconColor}`} />
-              </CardTitle>
-              <CardDescription>{stat.description}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <h1 className="text-2xl font-semibold">{stat.value}</h1>
-            </CardContent>
-          </Card>
-        ))}
+        <div className="flex items-center gap-2">
+          <Button
+            onClick={handleToggleAnonymity}
+            isLoading={isSettingAnonymous}
+            variant={isAnonymous ? "secondary" : "outline"}
+          >
+            {!isSettingAnonymous && <CheckIcon />} {!isAnonymous && "Set"}{" "}
+            Anonymous
+          </Button>
+          <Button
+            onClick={() => setSearchOpen(!searchOpen)}
+            variant={"outline"}
+          >
+            <SearchIcon /> Search Classes
+          </Button>
+        </div>
       </div>
 
-      <Tabs defaultValue="global">
-        <div className="flex flex-col justify-between gap-2 lg:flex-row">
-          <h1 className="text-2xl font-semibold">Student Rankings</h1>
-          <TabsList>
-            <TabsTrigger value="global">Global</TabsTrigger>
-            <TabsTrigger value="class">By Class</TabsTrigger>
-          </TabsList>
-        </div>
-        <TabsContent value="global" className="mt-2">
-          <div className="rounded-lg border">
+      <CommandDialog
+        modal={true}
+        open={searchOpen}
+        onOpenChange={setSearchOpen}
+      >
+        <CommandInput placeholder="Search class name or code..." />
+        <CommandList>
+          <CommandEmpty>No results found.</CommandEmpty>
+          <CommandGroup heading="Active Classes">
+            {activeClasses.map(({ id, name, code }) => (
+              <CommandItem
+                onSelect={() => {
+                  setSearchOpen(false);
+                  redirect("?code=" + code);
+                }}
+                key={id}
+              >
+                <div className="flex w-full flex-wrap items-center gap-2">
+                  <Fragment>
+                    <span>{name ?? "Unknown Class"}</span>
+                    <Badge variant={"outline"}>{code}</Badge>
+                  </Fragment>
+                </div>
+              </CommandItem>
+            ))}
+          </CommandGroup>
+        </CommandList>
+      </CommandDialog>
+
+      {!classCode ? (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center gap-2">
+            <h1 className="text-lg font-semibold">
+              You have no active classes.
+            </h1>
+            <p className="text-muted-foreground text-sm">
+              Come back when you have some classes to view the leaderboards.
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <Fragment>
+          <div className="mb-20 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
+            <StatCard
+              title={`Your Global Rank`}
+              description={`Among all ${classCode} students`}
+              value={
+                studentClassRanking?.rank
+                  ? `#${studentClassRanking.rank}`
+                  : "N/A"
+              }
+              icon={EarthIcon}
+              iconColor="stroke-green-500"
+            />
+            <StatCard
+              title={`Class Average`}
+              description={`Among all ${classCode} students`}
+              value={classAverage ? classAverage + "%" : "N/A"}
+              icon={UsersIcon}
+              iconColor={
+                classAverage == null
+                  ? "stroke-muted-foreground"
+                  : classAverage >= 80
+                    ? "stroke-green-500"
+                    : classAverage >= 50
+                      ? "stroke-yellow-500"
+                      : "stroke-red-500"
+              }
+              valueTextColor={
+                classAverage == null
+                  ? "text-muted-foreground"
+                  : classAverage >= 80
+                    ? "text-green-500"
+                    : classAverage >= 50
+                      ? "text-yellow-500"
+                      : "text-red-500"
+              }
+            />
+          </div>
+
+          <div className="flex flex-col justify-between gap-2 lg:flex-row">
+            <h1 className="text-2xl font-semibold">
+              Student Rankings {classCode && `For ${classCode}`}
+            </h1>
+          </div>
+          <div className="bg-card mt-4 rounded-lg border shadow-md">
             <Table className="overflow-clip rounded-lg">
-              <TableHeader className="bg-secondary">
+              <TableHeader className="bg-secondary text-primary-foreground">
                 <TableRow>
-                  <TableHead className="w-[100px]">Rank</TableHead>
-                  <TableHead>Overall Grade</TableHead>
-                  <TableHead>Student ID</TableHead>
-                  <TableHead className="text-right">Courses</TableHead>
+                  <TableHead className="w-[100px] text-center">Rank</TableHead>
+                  <TableHead>Class</TableHead>
+                  <TableHead>Student</TableHead>
+                  <TableHead className="text-right">Overall Grade</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {leaderboardData.map((entry, index) => (
-                  <TableRow key={index}>
-                    <TableCell className="p-4 font-medium">{entry.rank}</TableCell>
-                    <TableCell>{entry.grade}</TableCell>
-                    <TableCell>{entry.studentId}</TableCell>
-                    <TableCell className="text-right">{entry.courses}</TableCell>
-                  </TableRow>
-                ))}
+                {classRankings.map((data) => {
+                  const gradeColor =
+                    data.overallMark == null
+                      ? "text-muted-foreground"
+                      : Number(data.overallMark) >= 80
+                        ? "text-green-500"
+                        : Number(data.overallMark) >= 50
+                          ? "text-yellow-500"
+                          : "text-red-500";
+
+                  return (
+                    <TableRow
+                      key={data.id}
+                      className="hover:bg-muted transition"
+                    >
+                      <TableCell className="text-center font-medium">
+                        {data.rank}
+                      </TableCell>
+                      <TableCell>{data.code}</TableCell>
+                      <TableCell>
+                        {data.studentId ? (
+                          <div>{data.studentId}</div>
+                        ) : (
+                          <div className="blur-xs select-none">000000000</div>
+                        )}
+                      </TableCell>
+                      <TableCell className={`p-2 text-right font-semibold`}>
+                        <span className={gradeColor}>
+                          {data.overallMark ? `${data.overallMark}%` : "N/A"}
+                        </span>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           </div>
-        </TabsContent>
-        <TabsContent value="class" className="mt-2">
-          <div className="mb-6 flex flex-col">
-            <Select>
-              <SelectTrigger>
-                <SelectValue placeholder="Select a class" />
-              </SelectTrigger>
-              <SelectContent>
-                {classes.map((cls, index) => (
-                  <SelectItem key={index} value={cls.value}>{cls.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="rounded-lg border">
-            <Table className="overflow-clip rounded-lg">
-              <TableHeader className="bg-secondary">
-                <TableRow>
-                  <TableHead className="w-[100px]">Rank</TableHead>
-                  <TableHead>Student ID</TableHead>
-                  <TableHead>Overall Grade</TableHead>
-                  <TableHead className="text-right">Courses</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {leaderboardData.map((entry, index) => (
-                  <TableRow key={index}>
-                    <TableCell className="p-4 font-medium">{entry.rank}</TableCell>
-                    <TableCell>{entry.studentId}</TableCell>
-                    <TableCell>{entry.grade}</TableCell>
-                    <TableCell className="text-right">{entry.courses}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </TabsContent>
-      </Tabs>
+        </Fragment>
+      )}
     </main>
   );
 }

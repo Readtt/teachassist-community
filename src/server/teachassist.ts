@@ -74,7 +74,7 @@ async function getCourseInfo(loginData: LoginTA): Promise<Course[]> {
       const [courseInfo, blockInfo, rawStartTime, timeInfo, mark] = courseData;
 
       const [rawCode, rawName] = courseInfo?.split(" : ") ?? [];
-      const code = rawCode?.replace(":", "").trim();
+      const code = rawCode?.replace(":", "").trim().replace("Hodan Nalayeh Secondary School - ", "");
       const name = rawName ?? null;
       const startTime = new Date(rawStartTime?.split("~")[0]?.trim() ?? "");
       const hasDropped = timeInfo?.includes("Dropped on");

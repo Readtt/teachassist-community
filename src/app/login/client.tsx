@@ -43,6 +43,7 @@ export default function Login() {
         password: values.password,
         name: values.studentNumber,
         taPassword: values.password,
+        studentId: values.studentNumber
       },
       {
         onSuccess: () => {
@@ -125,16 +126,12 @@ export default function Login() {
                     )}
                   />
                   <Button
-                    disabled={isLoading}
+                    isLoading={isLoading}
                     type="submit"
                     variant={"highlight"}
                     className="w-full"
                   >
-                    {isLoading ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      "Login"
-                    )}
+                    Login
                   </Button>
                 </form>
               </Form>

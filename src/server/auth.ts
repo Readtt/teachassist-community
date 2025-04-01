@@ -5,10 +5,24 @@ import { encryptPassword } from "~/lib/crypto";
 import { db } from "./db";
 import { tryCatch } from "./helpers";
 import { loginTA } from "./teachassist";
+import { emailToStudentId } from "~/lib/utils";
 
-type AuthContext = {
+type AuthContext<T> = {
   path: string;
-  body?: { email: string; password: string };
+  body?: T;
+};
+
+type SignUpBody = {
+  email: string;
+  password: string;
+  name: string;
+  taPassword: string;
+  studentId: string;
+};
+
+type SignInBody = {
+  email: string;
+  password: string;
 };
 
 export const auth = betterAuth({
@@ -24,37 +38,61 @@ export const auth = betterAuth({
         type: "string",
         required: true,
       },
+      studentId: {
+        type: "string",
+        required: true,
+      },
     },
   },
   hooks: {
-    before: createAuthMiddleware(async (ctx: AuthContext) => {
-      if (ctx.path !== "/sign-up/email" && ctx.path !== "/sign-in/email") {
-        return;
-      }
+    before: createAuthMiddleware(async (authCtx: AuthContext<unknown>) => {
+      if (authCtx.path === "/sign-up/email") {
+        const ctx = authCtx as AuthContext<SignUpBody>;
+        const studentIdFromEmail = emailToStudentId(ctx.body?.email ?? "");
+        const studentId = ctx.body?.studentId;
+        const password = ctx.body?.password;
+        const taPassword = ctx.body?.taPassword;
 
-      const studentId = ctx.body?.email.split("@")[0];
-      const password = ctx.body?.password;
-      const { error } = await tryCatch(
-        loginTA(studentId ?? "", password ?? ""),
-      );
+        if (studentIdFromEmail !== studentId)
+          throw new APIError("CONFLICT", {
+            message: "School email and student id do not match.",
+          });
 
-      if (error)
-        throw new APIError("FORBIDDEN", {
-          message: error.message,
-        });
+        if (password !== taPassword)
+          throw new APIError("CONFLICT", {
+            message: "Password and ta password do not match.",
+          });
 
-      if (ctx.path == "/sign-up/email") {
+        const { error } = await tryCatch(loginTA(studentId, password ?? ""));
+
+        if (error)
+          throw new APIError("FORBIDDEN", {
+            message: error.message,
+          });
+
         return {
           context: {
             ...ctx,
             body: {
               ...ctx.body,
-              taPassword: encryptPassword(
-                (ctx.body as unknown as { taPassword: string })?.taPassword,
-              ),
+              taPassword: encryptPassword(taPassword ?? ""),
+              studentId,
             },
           },
         };
+      }
+
+      if (authCtx.path === "/sign-in/email") {
+        const ctx = authCtx as AuthContext<SignInBody>;
+        const studentId = emailToStudentId(ctx.body?.email ?? "");
+        const password = ctx.body?.password;
+
+        const { error } = await tryCatch(loginTA(studentId, password ?? ""));
+
+        if (error)
+          throw new APIError("FORBIDDEN", {
+            message: error.message,
+          });
       }
     }),
   },

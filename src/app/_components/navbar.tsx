@@ -1,13 +1,13 @@
 "use client";
 
-import { Button } from "~/components/ui/button";
-import { authClient, type Session } from "~/lib/auth-client";
-import { cn } from "~/lib/utils";
 import { MenuIcon, XIcon } from "lucide-react";
 import Link from "next/link";
 import { redirect, usePathname } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
+import { Button } from "~/components/ui/button";
+import { authClient, type Session } from "~/lib/auth-client";
+import { cn } from "~/lib/utils";
 import Logo from "./logo";
 
 const navigationLinks = [
@@ -22,15 +22,16 @@ const navigationLinks = [
 ] as const;
 
 export default function Navbar({ session }: { session: Session }) {
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
 
   const handleLogout = async () => {
-    await authClient
-      .signOut()
-      .then(({ data }) =>
-        data?.success ? redirect("/login") : toast.error("Failed to logout"),
-      );
+    setIsLoggingOut(true);
+    const { error } = await authClient.signOut();
+    if (error) toast.error(error.message);
+
+    redirect("/login");
   };
 
   return (
@@ -70,7 +71,11 @@ export default function Navbar({ session }: { session: Session }) {
               <p className="text-muted-foreground text-sm tracking-tighter">
                 Signed in as {session.user.name}
               </p>
-              <Button variant={"outline"} onClick={handleLogout}>
+              <Button
+                isLoading={isLoggingOut}
+                variant={"outline"}
+                onClick={handleLogout}
+              >
                 Logout
               </Button>
             </div>

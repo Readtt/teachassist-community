@@ -3,10 +3,14 @@
 
 import {
   boolean,
+  jsonb,
   pgTableCreator,
   text,
-  timestamp
+  timestamp,
+  numeric,
 } from "drizzle-orm/pg-core";
+import { type Assignment, type Course } from "~/common/types/teachassist";
+import { relations } from "drizzle-orm";
 
 /**
  * This is an example of how to use the multi-project schema feature of Drizzle ORM. Use the same
@@ -18,6 +22,44 @@ export const createTable = pgTableCreator(
   (name) => `teachassist-community_${name}`,
 );
 
+export const assignment = createTable("assignment", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  feedback: text("feedback"),
+  categories: jsonb("categories").notNull().$type<Assignment["categories"]>(), // ← stores KU, T, C, A, O
+  courseId: text("course_id").notNull().references(() => course.id, {
+    onDelete: "cascade",
+  }),
+});
+
+export const course = createTable("course", {
+  id: text("id").primaryKey(),
+  code: text("code").notNull(),
+  name: text("name"),
+  block: numeric("block").notNull(),
+  room: text("room").notNull(),
+  times: jsonb("times").notNull().$type<Course["times"]>(), // ← stores startTime, endTime, droppedTime
+  overallMark: numeric("overall_mark"),
+  isFinal: boolean("is_final").notNull().default(false),
+  isMidterm: boolean("is_midterm").notNull().default(false),
+  link: text("link"),
+  isAnonymous: boolean("is_anonymous").notNull().default(true),
+  userId: text("user_id").notNull().references(() => user.id, {
+    onDelete: "cascade",
+  })
+});
+
+export const courseRelations = relations(course, ({ many }) => ({
+  assignments: many(assignment),
+}));
+
+export const assignmentRelations = relations(assignment, ({ one }) => ({
+  course: one(course, {
+    fields: [assignment.courseId],
+    references: [course.id],
+  }),
+}));
+
 export const user = createTable("user", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
@@ -26,7 +68,9 @@ export const user = createTable("user", {
   image: text("image"),
   createdAt: timestamp("created_at").notNull(),
   updatedAt: timestamp("updated_at").notNull(),
-  taPassword: text('ta_password').notNull()
+  taPassword: text('ta_password').notNull(),
+  studentId: text('student_id').notNull(),
+  lastSyncedAt: timestamp("last_synced_at"),
 });
 
 export const session = createTable("session", {
