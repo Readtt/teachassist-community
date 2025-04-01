@@ -20,6 +20,7 @@ export async function toggleAnonymous(code: string) {
     .where(
       and(
         eq(course.code, code),
+        eq(course.userId, userId),
         sql`(${course.times}->>'startTime')::timestamptz <= ${currentDate}::timestamptz`,
         sql`(${course.times}->>'endTime')::timestamptz >= ${currentDate}::timestamptz`,
       ),
@@ -27,7 +28,6 @@ export async function toggleAnonymous(code: string) {
     .limit(1);
 
   if (!existingCourse) throw new Error("Course not found");
-  if (existingCourse.userId !== userId) throw new Error("Forbidden");
   const newAnonymousState = existingCourse.isAnonymous;
 
   await db
@@ -36,6 +36,7 @@ export async function toggleAnonymous(code: string) {
     .where(
       and(
         eq(course.code, code),
+        eq(course.userId, userId),
         sql`(${course.times}->>'startTime')::timestamptz <= ${currentDate}::timestamptz`,
         sql`(${course.times}->>'endTime')::timestamptz >= ${currentDate}::timestamptz`,
       ),
