@@ -5,10 +5,12 @@ import { ElementType } from "domelementtype";
 import { type AnyNode } from "domhandler";
 import makeFetchCookie from "fetch-cookie";
 import nodeFetch from "node-fetch";
+import { CookieJar } from "tough-cookie";
 import type { Assignment, Course, LoginTA } from "~/common/types/teachassist";
 import { tryCatch } from "./helpers";
 
-const fetch = makeFetchCookie(nodeFetch);
+const jar = new CookieJar();
+const fetch = makeFetchCookie(nodeFetch, jar);
 
 export async function loginTA(
   studentId: string,
