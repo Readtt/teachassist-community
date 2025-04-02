@@ -61,13 +61,13 @@ export default function Login() {
                   redirect("/");
                 },
                 onError: (e) => {
-                  toast.error(e.error.message);
+                  toast.error(e.error.message ?? "There was an issue encountered while logging in.");
                 },
               },
             );
+          } else {
+            toast.error(ctx.error.message);
           }
-
-          toast.error(ctx.error.message);
         },
       },
     );
