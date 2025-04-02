@@ -4,7 +4,13 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { Fragment } from "react";
 import { auth } from "~/server/auth";
-import { getActiveClasses, getClassAverage, getClassRankings, getStudentClassAnonymity, getStudentClassRanking } from "~/server/queries";
+import {
+  getActiveClasses,
+  getClassAverage,
+  getClassRankings,
+  getStudentClassAnonymity,
+  getStudentClassRanking,
+} from "~/server/queries";
 import Navbar from "../_components/navbar";
 import Leaderboard from "./client";
 
@@ -20,14 +26,19 @@ export default async function Page({
 
   const activeClasses = await getActiveClasses();
   const params = await searchParams;
-  const classCode = (params?.code ?? activeClasses[activeClasses.length - 1]?.code) ?? null;
+  const classCode =
+    params?.code ?? activeClasses[activeClasses.length - 1]?.code ?? null;
 
   const classRankings = classCode ? await getClassRankings(classCode) : [];
-  const studentClassRanking = classCode ? await getStudentClassRanking(classCode) : undefined;
+  const studentClassRanking = classCode
+    ? await getStudentClassRanking(classCode)
+    : undefined;
   const classAverage = classCode ? await getClassAverage(classCode) : null;
-  const isAnonymous = classCode ? await getStudentClassAnonymity(classCode) : true;
+  const isAnonymous = classCode
+    ? await getStudentClassAnonymity(classCode)
+    : true;
 
-  // TODO: error check
+  if (!params?.code) redirect("/leaderboard?code=" + classCode);
 
   return (
     <Fragment>

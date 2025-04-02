@@ -1,5 +1,13 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { type z } from "zod";
+import { loginSchema } from "~/common/types/login";
 import { Button } from "~/components/ui/button";
 import {
   Form,
@@ -12,17 +20,8 @@ import {
 } from "~/components/ui/form";
 import { Input } from "~/components/ui/input";
 import { authClient } from "~/lib/auth-client";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2 } from "lucide-react";
-import Link from "next/link";
-import { redirect } from "next/navigation";
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { toast } from "sonner";
-import { type z } from "zod";
-import Logo from "../_components/logo";
-import { loginSchema } from "~/common/types/login";
 import { studentIdToEmail } from "~/lib/utils";
+import Logo from "../_components/logo";
 
 export default function Login() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -43,12 +42,12 @@ export default function Login() {
         password: values.password,
         name: values.studentNumber,
         taPassword: values.password,
-        studentId: values.studentNumber
+        studentId: values.studentNumber,
       },
       {
         onSuccess: () => {
           toast.success("Account created successfully.");
-          redirect("/");
+          redirect("/?created=true");
         },
         onError: async (ctx) => {
           if (ctx.error.code === "USER_ALREADY_EXISTS") {

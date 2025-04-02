@@ -6,6 +6,7 @@ import { redirect, usePathname } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "~/components/ui/button";
+import { ThemeToggle } from "~/components/ui/theme-toggle";
 import { authClient, type Session } from "~/lib/auth-client";
 import { cn } from "~/lib/utils";
 import Logo from "./logo";
@@ -61,9 +62,9 @@ export default function Navbar({ session }: { session: Session }) {
                 <Button
                   key={link.href}
                   variant={pathname === link.href ? "secondary" : "ghost"}
-                  asChild
+                  onClick={() => redirect(link.href)}
                 >
-                  <Link href={link.href}>{link.name}</Link>
+                  {link.name}
                 </Button>
               ))}
             </div>
@@ -71,6 +72,7 @@ export default function Navbar({ session }: { session: Session }) {
               <p className="text-muted-foreground text-sm tracking-tighter">
                 Signed in as {session.user.name}
               </p>
+              <ThemeToggle />
               <Button
                 isLoading={isLoggingOut}
                 variant={"outline"}

@@ -151,7 +151,7 @@ export default function Leaderboard({
         </CommandList>
       </CommandDialog>
 
-      {!classCode ? (
+      {activeClasses.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center gap-2">
             <h1 className="text-lg font-semibold">

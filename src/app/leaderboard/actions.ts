@@ -27,7 +27,7 @@ export async function toggleAnonymous(code: string) {
     )
     .limit(1);
 
-  if (!existingCourse) throw new Error("Course not found");
+  if (!existingCourse) throw new Error("Course not found, or you are not enrolled in the course.");
   const newAnonymousState = existingCourse.isAnonymous;
 
   await db

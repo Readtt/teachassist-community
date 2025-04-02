@@ -1,12 +1,19 @@
 "use client";
 
 import { ChartLineIcon, RefreshCcw, UserIcon } from "lucide-react";
-import { redirect, useRouter } from "next/navigation";
-import { useState } from "react";
+import { redirect, useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { SyncResponse } from "~/common/types/sync";
 import StatCard from "~/components/stat-card";
 import { Button } from "~/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "~/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import type { Session } from "~/lib/auth-client";
 import { tryCatch } from "~/server/helpers";
@@ -24,7 +31,15 @@ export default function Home({
   pastClasses: Awaited<ReturnType<typeof getPastClasses>>;
 }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const [open, setOpen] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get("created")) {
+      setOpen(true);
+    }
+  }, [searchParams]);
 
   async function handleSync() {
     setIsSyncing(true);
@@ -67,6 +82,18 @@ export default function Home({
           </Button>
         </div>
       </div>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Sync Your Data</DialogTitle>
+            <DialogDescription>
+              You just logged in. Click the <strong>Sync Data</strong> button to
+              update your information and ensure everything is up to date.
+            </DialogDescription>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
 
       <div className="mb-20 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard

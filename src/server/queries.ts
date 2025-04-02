@@ -67,7 +67,7 @@ export async function getStudentClassRanking(code: string) {
   const studentRankings = await db
     .select({
       userId: course.userId,
-      rank: sql<string>`RANK() OVER (ORDER BY ${course.overallMark} DESC)`.as(
+      rank: sql<string>`RANK() OVER (ORDER BY ${course.overallMark} DESC NULLS LAST)`.as(
         "rank",
       ),
     })
@@ -98,7 +98,7 @@ export async function getClassRankings(code: string) {
       code: course.code,
       name: course.name,
       overallMark: course.overallMark,
-      rank: sql<string>`RANK() OVER (ORDER BY ${course.overallMark} DESC)`.as(
+      rank: sql<string>`RANK() OVER (ORDER BY ${course.overallMark} DESC NULLS LAST)`.as(
         "rank",
       ),
       studentId: sql<string>`

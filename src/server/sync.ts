@@ -20,7 +20,6 @@ export default async function syncTA(studentId: string, password: string) {
         const [existingCourse] = await trx
           .select()
           .from(course)
-          // TODO: check for within timeframe active course
           .where(and(eq(course.code, c.code), eq(course.userId, userId), eq(course.room, c.room)));
 
         const courseId = existingCourse?.id ?? uuidv4();
