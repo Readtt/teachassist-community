@@ -179,7 +179,7 @@ export default function Leaderboard({
             <StatCard
               title={`Class Average`}
               description={`Among all ${classCode} students`}
-              value={classAverage ? classAverage + "%" : "N/A"}
+              value={classAverage ? (Math.round(classAverage * 100) / 100) + "%" : "N/A"}
               icon={UsersIcon}
               iconColor={
                 classAverage == null

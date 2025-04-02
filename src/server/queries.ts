@@ -87,11 +87,9 @@ export async function getStudentClassRanking(code: string) {
   return studentClassRanking;
 }
 
-export async function getClassRankings(code: string, page = 1, pageSize = 10) {
+export async function getClassRankings(code: string) {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) throw new Error("Unauthorized");
-
-  const offset = (page - 1) * pageSize;
 
   const currentDate = new Date().toISOString();
   const rankedCourses = await db
@@ -119,8 +117,6 @@ export async function getClassRankings(code: string, page = 1, pageSize = 10) {
         sql`(${course.times}->>'endTime')::timestamptz >= ${currentDate}::timestamptz`,
       ),
     )
-    .limit(pageSize)
-    .offset(offset);
 
   return rankedCourses;
 }
