@@ -89,10 +89,12 @@ export const auth = betterAuth({
 
         const { error } = await tryCatch(loginTA(studentId, password ?? ""));
 
-        if (error)
+        if (error) {
+          console.log(error);
           throw new APIError("FORBIDDEN", {
             message: error.message,
           });
+        }
       }
     }),
   },
