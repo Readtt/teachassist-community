@@ -15,7 +15,6 @@ export default function ClassCard({
   name,
   code,
   overallMark,
-  assignments,
   block,
 
   isFinal,
@@ -71,14 +70,14 @@ export default function ClassCard({
             value={Number(overallMark) ?? 0}
           />
         </div>
-        <div className="flex flex-col">
+        {/* <div className="flex flex-col">
           <span className="text-muted-foreground text-xs">
             Latest Graded Item
           </span>
           <p className="text-sm font-medium">
             {assignments[0]?.name ?? "No assignments"}
           </p>
-        </div>
+        </div> */}
         {/* <div className="mt-auto flex justify-end">
           <Button
             variant="link"

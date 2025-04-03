@@ -1,7 +1,7 @@
 import { and, eq } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
 import { db } from "./db";
-import { assignment, course, user } from "./db/schema";
+import { course, user } from "./db/schema";
 import { getStudentTAInfo } from "./teachassist";
 
 export default async function syncTA(studentId: string, password: string) {
@@ -57,38 +57,38 @@ export default async function syncTA(studentId: string, password: string) {
           });
         }
 
-        for (const a of c.assignments) {
-          const [existingAssignment] = await trx
-            .select()
-            .from(assignment)
-            .where(
-              and(
-                eq(assignment.name, a.name),
-                eq(assignment.courseId, courseId),
-              ),
-            );
+        // for (const a of c.assignments) {
+        //   const [existingAssignment] = await trx
+        //     .select()
+        //     .from(assignment)
+        //     .where(
+        //       and(
+        //         eq(assignment.name, a.name),
+        //         eq(assignment.courseId, courseId),
+        //       ),
+        //     );
 
-          const assignmentId = existingAssignment?.id ?? uuidv4();
+        //   const assignmentId = existingAssignment?.id ?? uuidv4();
 
-          if (existingAssignment) {
-            await trx
-              .update(assignment)
-              .set({
-                name: a.name,
-                feedback: a.feedback,
-                categories: a.categories,
-              })
-              .where(eq(assignment.id, assignmentId));
-          } else {
-            await trx.insert(assignment).values({
-              id: assignmentId,
-              name: a.name,
-              feedback: a.feedback,
-              categories: a.categories,
-              courseId,
-            });
-          }
-        }
+        //   if (existingAssignment) {
+        //     await trx
+        //       .update(assignment)
+        //       .set({
+        //         name: a.name,
+        //         feedback: a.feedback,
+        //         categories: a.categories,
+        //       })
+        //       .where(eq(assignment.id, assignmentId));
+        //   } else {
+        //     await trx.insert(assignment).values({
+        //       id: assignmentId,
+        //       name: a.name,
+        //       feedback: a.feedback,
+        //       categories: a.categories,
+        //       courseId,
+        //     });
+        //   }
+        // }
 
         await trx
           .update(user)

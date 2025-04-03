@@ -3,23 +3,19 @@ import "server-only";
 import { load, type Cheerio } from "cheerio";
 import { ElementType } from "domelementtype";
 import { type AnyNode } from "domhandler";
-import makeFetchCookie from "fetch-cookie";
-import nodeFetch from "node-fetch";
-import { CookieJar } from "tough-cookie";
 import type { Assignment, Course, LoginTA } from "~/common/types/teachassist";
 import { tryCatch } from "./helpers";
-
-const jar = new CookieJar();
-const fetch = makeFetchCookie(nodeFetch, jar);
+import makeFetchCookie from 'fetch-cookie'
 
 export async function loginTA(
   studentId: string,
   password: string,
 ): Promise<LoginTA> {
   const URL = `https://ta.yrdsb.ca/live/index.php?username=${studentId}&password=${password}&submit=Login&subject_id=0`;
+  const fetchCookie = makeFetchCookie(fetch);
 
   const loginResponse = await tryCatch(
-    fetch(URL, { method: "POST", body: "credentials" }),
+    fetchCookie(URL, { method: "POST", body: "credentials" }),
   );
   if (loginResponse.error)
     throw new Error("Teachassist is currently unavailable");
@@ -27,7 +23,7 @@ export async function loginTA(
   const html = await tryCatch(loginResponse.data.text());
   if (
     html.error ||
-    ["Invalid Login", "Access Denied", "Session Expired"].some((err) =>
+    ["Invalid Login", "Access Denied", "Session Expired", "YRDSB teachassist login"].some((err) =>
       html.data.includes(err),
     )
   ) {
@@ -76,7 +72,10 @@ async function getCourseInfo(loginData: LoginTA): Promise<Course[]> {
       const [courseInfo, blockInfo, rawStartTime, timeInfo, mark] = courseData;
 
       const [rawCode, rawName] = courseInfo?.split(" : ") ?? [];
-      const code = rawCode?.replace(":", "").trim().replace("Hodan Nalayeh Secondary School - ", "");
+      const code = rawCode
+        ?.replace(":", "")
+        .trim()
+        .replace("Hodan Nalayeh Secondary School - ", "");
       const name = rawName ?? null;
       const startTime = new Date(rawStartTime?.split("~")[0]?.trim() ?? "");
       const hasDropped = timeInfo?.includes("Dropped on");
@@ -117,8 +116,8 @@ async function getCourseInfo(loginData: LoginTA): Promise<Course[]> {
         assignments: [],
       };
 
-      const assignments = await getAssignments(course);
-      course.assignments = assignments;
+      // const assignments = await getAssignments(course);
+      // course.assignments = assignments;
 
       courses.push(course);
     } catch (e) {
@@ -174,7 +173,7 @@ async function getAssignments(course: Course): Promise<Assignment[]> {
         T: createCategory(T),
         C: createCategory(C),
         A: createCategory(A),
-        O: createCategory(O)
+        O: createCategory(O),
       },
     });
   });
