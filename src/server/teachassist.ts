@@ -17,8 +17,10 @@ export async function loginTA(
   const loginResponse = await tryCatch(
     fetchCookie(URL, { method: "POST", body: "credentials" }),
   );
-  if (loginResponse.error)
+  if (loginResponse.error) {
+    console.log(loginResponse.error);
     throw new Error("Teachassist is currently unavailable");
+  }
 
   const html = await tryCatch(loginResponse.data.text());
   if (
