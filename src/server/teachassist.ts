@@ -1,5 +1,3 @@
-import "server-only";
-
 import { load, type Cheerio } from "cheerio";
 import { ElementType } from "domelementtype";
 import { type AnyNode } from "domhandler";
@@ -7,7 +5,7 @@ import type { Assignment, Course, LoginTA } from "~/common/types/teachassist";
 import { tryCatch } from "./helpers";
 import makeFetchCookie from 'fetch-cookie'
 
-const fetchCookie = makeFetchCookie(global.fetch)
+const fetchCookie = makeFetchCookie(fetch)
 
 export async function loginTA(
   studentId: string,
