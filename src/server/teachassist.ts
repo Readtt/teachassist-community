@@ -5,22 +5,20 @@ import { ElementType } from "domelementtype";
 import { type AnyNode } from "domhandler";
 import type { Assignment, Course, LoginTA } from "~/common/types/teachassist";
 import { tryCatch } from "./helpers";
-import makeFetchCookie from 'fetch-cookie'
+import { fetch as cookieFetch, CookieJar } from "node-fetch-cookies";
 
 export async function loginTA(
   studentId: string,
   password: string,
 ): Promise<LoginTA> {
   const URL = `https://ta.yrdsb.ca/live/index.php?username=${studentId}&password=${password}&submit=Login&subject_id=0`;
-  const fetchCookie = makeFetchCookie(fetch);
+  const cookieJar = new CookieJar();
 
   const loginResponse = await tryCatch(
-    fetchCookie(URL, { method: "POST", body: "credentials" }),
+    cookieFetch(cookieJar, URL, { method: "POST", body: "credentials" }),
   );
-  if (loginResponse.error) {
-    console.log(loginResponse.error);
+  if (loginResponse.error)
     throw new Error("Teachassist is currently unavailable");
-  }
 
   const html = await tryCatch(loginResponse.data.text());
   if (
