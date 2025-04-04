@@ -11,26 +11,18 @@ import { tryCatch } from "~/server/helpers";
 //@ts-expect-error No type definition
 import { fetch as cookieFetch, CookieJar } from "node-fetch-cookies";
 
-import Cors from "cors";
-
-const cors = Cors({
-  methods: ["POST"],
-});
-
-function runMiddleware(req: any, res: any, fn: any) {
-  return new Promise((resolve, reject) => {
-    fn(req, res, (result: any) => {
-      if (result instanceof Error) {
-        return reject(result);
-      }
-
-      return resolve(result);
-    });
-  });
+export async function OPTIONS(req: NextRequest) {
+  return new NextResponse(null, {
+    status: 204,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    },
+  })
 }
 
-export async function POST(req: NextRequest, res: NextResponse<LoginResponse>) {
-  await runMiddleware(req, res, cors);
+export async function POST(req: NextRequest) {
   try {
     const bodyRaw = (await req.json()) as z.infer<typeof loginSchema>;
     const body = loginSchema.parse(bodyRaw);
