@@ -18,14 +18,6 @@ export async function POST(req: Request) {
     const { studentId, password } = body;
 
     const URL = `https://ta.yrdsb.ca/live/index.php?username=${studentId}&password=${password}&submit=Login&subject_id=0`;
-    
-    try {
-      const res = await fetch("https://www.google.com");
-      return new Response(`Google Status: ${res.status}`);
-    } catch (error) {
-      console.log(error);
-    }
-
     const loginResponse = await tryCatch(
       fetchCookie(URL, {
         method: "POST",
