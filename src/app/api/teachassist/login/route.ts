@@ -1,11 +1,12 @@
-import makeFetchCookie from "fetch-cookie";
+// import makeFetchCookie from "fetch-cookie";
+import got from "got";
 import { NextResponse } from "next/server";
+import { CookieJar } from "tough-cookie";
 import type { z } from "zod";
 import { type LoginResponse, loginSchema } from "~/common/types/login";
-import { getBaseURL } from "~/lib/utils";
 import { tryCatch } from "~/server/helpers";
 
-const fetchCookie = makeFetchCookie(fetch);
+// const fetchCookie = makeFetchCookie(fetch);
 
 export async function POST(req: Request) {
   try {
@@ -13,15 +14,15 @@ export async function POST(req: Request) {
     const body = loginSchema.parse(bodyRaw);
     const { studentId, password } = body;
 
-    const URL =
-      getBaseURL() +
-      `/api/proxy?url=${encodeURIComponent(`https://ta.yrdsb.ca/live/index.php?username=${studentId}&password=${password}&submit=Login&subject_id=0`)}`;
+    const URL = `https://ta.yrdsb.ca/live/index.php?username=${studentId}&password=${password}&submit=Login&subject_id=0`;
 
+    const cookieJar  = new CookieJar();
     const loginResponse = await tryCatch(
-      fetchCookie(URL, {
-        method: "POST",
-        body: "credentials",
-      }),
+      got(URL, { cookieJar })
+      // fetchCookie(URL, {
+      //   method: "POST",
+      //   body: "credentials",
+      // }),
     );
 
     if (loginResponse.error) {
@@ -32,15 +33,14 @@ export async function POST(req: Request) {
       );
     }
 
-    const html = await tryCatch(loginResponse.data.text());
+    const html = loginResponse.data?.body;
     if (
-      html.error ||
       [
         "Invalid Login",
         "Access Denied",
         "Session Expired",
         "YRDSB teachassist login",
-      ].some((err) => html.data.includes(err))
+      ].some((err) => html.includes(err))
     ) {
       return NextResponse.json<LoginResponse>(
         { error: "Invalid student number or password" },
