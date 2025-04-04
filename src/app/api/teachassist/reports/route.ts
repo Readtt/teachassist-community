@@ -5,6 +5,7 @@ import type { z } from "zod";
 import { loginSchema } from "~/common/types/login";
 import { type ReportsResponse } from "~/common/types/reports";
 import type { Course } from "~/common/types/teachassist";
+import { getBaseURL } from "~/lib/utils";
 import { tryCatch } from "~/server/helpers";
 
 const fetchCookie = makeFetchCookie(fetch);
@@ -15,7 +16,9 @@ export async function POST(req: Request) {
     const body = loginSchema.parse(bodyRaw);
     const { studentId, password } = body;
 
-    const URL = `https://ta.yrdsb.ca/live/index.php?username=${studentId}&password=${password}&submit=Login&subject_id=0`;
+    const URL =
+      getBaseURL() +
+      `/api/proxy?url=${encodeURIComponent(`https://ta.yrdsb.ca/live/index.php?username=${studentId}&password=${password}&submit=Login&subject_id=0`)}`;
 
     const loginResponse = await tryCatch(
       fetchCookie(URL, {

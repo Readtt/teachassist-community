@@ -2,6 +2,7 @@ import makeFetchCookie from "fetch-cookie";
 import { NextResponse } from "next/server";
 import type { z } from "zod";
 import { type LoginResponse, loginSchema } from "~/common/types/login";
+import { getBaseURL } from "~/lib/utils";
 import { tryCatch } from "~/server/helpers";
 
 const fetchCookie = makeFetchCookie(fetch);
@@ -12,7 +13,9 @@ export async function POST(req: Request) {
     const body = loginSchema.parse(bodyRaw);
     const { studentId, password } = body;
 
-    const URL = `https://cors-anywhere.herokuapp.com/https://ta.yrdsb.ca/live/index.php?username=${studentId}&password=${password}&submit=Login&subject_id=0`;
+    const URL =
+      getBaseURL() +
+      `/api/proxy?url=${encodeURIComponent(`https://ta.yrdsb.ca/live/index.php?username=${studentId}&password=${password}&submit=Login&subject_id=0`)}`;
 
     const loginResponse = await tryCatch(
       fetchCookie(URL, {
