@@ -12,8 +12,7 @@ export async function POST(req: Request) {
     const body = loginSchema.parse(bodyRaw);
     const { studentId, password } = body;
 
-    const proxy = "https://cors-anywhere.herokuapp.com/";
-    const URL = proxy + `https://ta.yrdsb.ca/live/index.php?username=${studentId}&password=${password}&submit=Login&subject_id=0`;
+    const URL = `https://ta.yrdsb.ca/live/index.php?username=${studentId}&password=${password}&submit=Login&subject_id=0`;
     const loginResponse = await tryCatch(
       fetchCookie(URL, {
         method: "POST",
