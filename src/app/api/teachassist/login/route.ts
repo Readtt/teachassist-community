@@ -3,10 +3,11 @@ import { NextResponse } from "next/server";
 import type { z } from "zod";
 import { type LoginResponse, loginSchema } from "~/common/types/login";
 import { tryCatch } from "~/server/helpers";
-import fetch from "node-fetch"
+import fetchPonyfill from 'fetch-ponyfill'
 
 export async function POST(req: Request) {
-  const fetchCookie = makeFetchCookie(fetch, new makeFetchCookie.toughCookie.CookieJar(), false);
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+  const fetchCookie = makeFetchCookie(fetchPonyfill().fetch, new makeFetchCookie.toughCookie.CookieJar(), false);
 
   try {
     const bodyRaw = (await req.json()) as z.infer<typeof loginSchema>;
@@ -29,6 +30,7 @@ export async function POST(req: Request) {
       );
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-call
     const html = await tryCatch(loginResponse.data.text());
     if (
       html.error || 
@@ -37,6 +39,7 @@ export async function POST(req: Request) {
         "Access Denied",
         "Session Expired",
         "YRDSB teachassist login",
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
       ].some((err) => html.data.includes(err))
     ) {
       return NextResponse.json<LoginResponse>(
