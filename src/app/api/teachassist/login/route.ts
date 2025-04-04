@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import type { z } from "zod";
 import { type LoginResponse, loginSchema } from "~/common/types/login";
 import { tryCatch } from "~/server/helpers";
+import fetch from "node-fetch"
 
 export async function POST(req: Request) {
   const fetchCookie = makeFetchCookie(fetch, new makeFetchCookie.toughCookie.CookieJar(), false);
