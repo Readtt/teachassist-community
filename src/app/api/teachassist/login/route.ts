@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
@@ -10,7 +11,26 @@ import { tryCatch } from "~/server/helpers";
 //@ts-expect-error No type definition
 import { fetch as cookieFetch, CookieJar } from "node-fetch-cookies";
 
-export async function POST(req: Request) {
+import Cors from "cors";
+
+const cors = Cors({
+  methods: ["POST"],
+});
+
+function runMiddleware(req: any, res: any, fn: any) {
+  return new Promise((resolve, reject) => {
+    fn(req, res, (result: any) => {
+      if (result instanceof Error) {
+        return reject(result);
+      }
+
+      return resolve(result);
+    });
+  });
+}
+
+export async function POST(req: Request, res: Response) {
+  await runMiddleware(req, res, cors);
   try {
     const bodyRaw = (await req.json()) as z.infer<typeof loginSchema>;
     const body = loginSchema.parse(bodyRaw);
