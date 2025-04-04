@@ -1,11 +1,11 @@
-import { betterAuth } from "better-auth";
+import { betterAuth, type Status } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { APIError, createAuthMiddleware } from "better-auth/api";
+import type { LoginResponse } from "~/common/types/login";
 import { encryptPassword } from "~/lib/crypto";
+import { emailToStudentId, getBaseURL } from "~/lib/utils";
 import { db } from "./db";
 import { tryCatch } from "./helpers";
-import { loginTA } from "./teachassist";
-import { emailToStudentId } from "~/lib/utils";
 
 type AuthContext<T> = {
   path: string;
@@ -63,11 +63,24 @@ export const auth = betterAuth({
             message: "Password and ta password do not match.",
           });
 
-        const { error } = await tryCatch(loginTA(studentId, password ?? ""));
+        const { data, error } = await tryCatch(
+          fetch(getBaseURL() + "/api/teachassist/login", {
+            method: "POST",
+            body: JSON.stringify({ studentId, password }),
+            headers: { "Content-Type": "application/json" },
+          }),
+        );
 
-        if (error)
-          throw new APIError("FORBIDDEN", {
-            message: error.message,
+        if (error) {
+          throw new APIError(500, {
+            message: "Teachassist request failed",
+          });
+        }
+
+        const json = (await data.json()) as LoginResponse;
+        if (json.error)
+          throw new APIError(data.status as Status, {
+            message: json.error,
           });
 
         return {
@@ -87,11 +100,23 @@ export const auth = betterAuth({
         const studentId = emailToStudentId(ctx.body?.email ?? "");
         const password = ctx.body?.password;
 
-        const { error } = await tryCatch(loginTA(studentId, password ?? ""));
+        const { data, error } = await tryCatch(
+          fetch(getBaseURL() + "/api/teachassist/login", {
+            method: "POST",
+            body: JSON.stringify({ studentId, password }),
+            headers: { "Content-Type": "application/json" },
+          }),
+        );
 
         if (error)
-          throw new APIError("FORBIDDEN", {
-            message: error.message,
+          throw new APIError(500, {
+            message: "Teachassist request failed",
+          });
+
+        const json = (await data.json()) as LoginResponse;
+        if (json.error)
+          throw new APIError(data.status as Status, {
+            message: json.error,
           });
       }
     }),

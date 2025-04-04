@@ -1,12 +1,27 @@
 import { and, eq } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
+import type { ReportsResponse } from "~/common/types/reports";
+import { getBaseURL } from "~/lib/utils";
 import { db } from "./db";
 import { course, user } from "./db/schema";
-import { getStudentTAInfo } from "./teachassist";
+import { tryCatch } from "./helpers";
 
 export default async function syncTA(studentId: string, password: string) {
   try {
-    const courses = await getStudentTAInfo(studentId, password);
+    const { data, error } = await tryCatch(
+      fetch(getBaseURL() + "/api/teachassist/reports", {
+        method: "POST",
+        body: JSON.stringify({ studentId, password }),
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+
+    if (error) throw error;
+    const json = (await data.json()) as ReportsResponse;
+
+    if (json.error) throw new Error(`status - ${data.status}: ` + json.error)
+
+    const courses = json.courses;
     const [existingUser] = await db
       .select()
       .from(user)

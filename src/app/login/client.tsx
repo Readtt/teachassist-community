@@ -29,7 +29,7 @@ export default function Login() {
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      studentNumber: "",
+      studentId: "",
       password: "",
     },
   });
@@ -38,11 +38,11 @@ export default function Login() {
     setIsLoading(true);
     await authClient.signUp.email(
       {
-        email: studentIdToEmail(values.studentNumber),
+        email: studentIdToEmail(values.studentId),
         password: values.password,
-        name: values.studentNumber,
+        name: values.studentId,
         taPassword: values.password,
-        studentId: values.studentNumber,
+        studentId: values.studentId,
       },
       {
         onSuccess: () => {
@@ -53,7 +53,7 @@ export default function Login() {
           if (ctx.error.code === "USER_ALREADY_EXISTS") {
             await authClient.signIn.email(
               {
-                email: studentIdToEmail(values.studentNumber),
+                email: studentIdToEmail(values.studentId),
                 password: values.password,
               },
               {
@@ -94,7 +94,7 @@ export default function Login() {
                 >
                   <FormField
                     control={form.control}
-                    name="studentNumber"
+                    name="studentId"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Student Number</FormLabel>
