@@ -14,6 +14,7 @@ export async function POST(req: Request) {
     const { studentId, password } = body;
 
     const URL = `https://ta.yrdsb.ca/live/index.php?username=${studentId}&password=${password}&submit=Login&subject_id=0`;
+    console.log(await fetchCookie(URL, { method: "POST", body: "credentials" }));
     const loginResponse = await tryCatch(
       fetchCookie(URL, {
         method: "POST",
