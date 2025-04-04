@@ -3,7 +3,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 
-import { NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import type { z } from "zod";
 import { type LoginResponse, loginSchema } from "~/common/types/login";
 import { tryCatch } from "~/server/helpers";
@@ -29,7 +29,7 @@ function runMiddleware(req: any, res: any, fn: any) {
   });
 }
 
-export async function POST(req: Request, res: Response) {
+export async function POST(req: NextRequest, res: NextResponse<LoginResponse>) {
   await runMiddleware(req, res, cors);
   try {
     const bodyRaw = (await req.json()) as z.infer<typeof loginSchema>;
@@ -52,7 +52,9 @@ export async function POST(req: Request, res: Response) {
         { status: 503 },
       );
 
-    const html = await tryCatch((loginResponse.data as Awaited<ReturnType<typeof fetch>>).text());
+    const html = await tryCatch(
+      (loginResponse.data as Awaited<ReturnType<typeof fetch>>).text(),
+    );
     if (
       html.error ||
       [
