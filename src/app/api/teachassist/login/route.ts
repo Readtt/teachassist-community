@@ -3,10 +3,14 @@ import { NextResponse } from "next/server";
 import type { z } from "zod";
 import { type LoginResponse, loginSchema } from "~/common/types/login";
 import { tryCatch } from "~/server/helpers";
-import fetch from "node-fetch"
+import fetch from "node-fetch";
 
 export async function POST(req: Request) {
-  const fetchCookie = makeFetchCookie(fetch, new makeFetchCookie.toughCookie.CookieJar(), false);
+  const fetchCookie = makeFetchCookie(
+    fetch,
+    new makeFetchCookie.toughCookie.CookieJar(),
+    false,
+  );
 
   try {
     const bodyRaw = (await req.json()) as z.infer<typeof loginSchema>;
@@ -14,11 +18,23 @@ export async function POST(req: Request) {
     const { studentId, password } = body;
 
     const URL = `https://ta.yrdsb.ca/live/index.php?username=${studentId}&password=${password}&submit=Login&subject_id=0`;
-    console.log(await fetchCookie(URL, { method: "POST", body: "credentials" }));
+    
+    try {
+      const res = await fetch("https://www.google.com");
+      return new Response(`Google Status: ${res.status}`);
+    } catch (error) {
+      console.log(error);
+    }
+
     const loginResponse = await tryCatch(
       fetchCookie(URL, {
         method: "POST",
         body: "credentials",
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36",
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
       }),
     );
 
@@ -32,7 +48,7 @@ export async function POST(req: Request) {
 
     const html = await tryCatch(loginResponse.data.text());
     if (
-      html.error || 
+      html.error ||
       [
         "Invalid Login",
         "Access Denied",
@@ -47,7 +63,7 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json<LoginResponse>({ error: null }, { status: 200 });
-  } catch(e) {
+  } catch (e) {
     console.log(e);
     return NextResponse.json<LoginResponse>(
       { error: "Invalid student number or password" },
