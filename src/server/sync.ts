@@ -8,6 +8,25 @@ import { tryCatch } from "./helpers";
 
 export default async function syncTA(studentId: string, password: string) {
   try {
+    const [existingUser] = await db
+    .select()
+    .from(user)
+    .where(eq(user.studentId, studentId));
+
+    if (!existingUser) throw new Error("Could not find student: " + studentId);
+
+    const lastSynced = existingUser.lastSyncedAt;
+    const now = new Date();
+
+    if (lastSynced) {
+      const oneDayAgo = new Date();
+      oneDayAgo.setDate(now.getDate() - 1);
+
+      if (lastSynced > oneDayAgo) {
+        throw new Error("You can only sync once every 24 hours.");
+      }
+    }
+
     const { data, error } = await tryCatch(
       fetch(getBaseURL() + "/api/teachassist/reports", {
         method: "POST",
@@ -19,15 +38,9 @@ export default async function syncTA(studentId: string, password: string) {
     if (error) throw error;
     const json = (await data.json()) as ReportsResponse;
 
-    if (json.error) throw new Error(`status - ${data.status}: ` + json.error)
+    if (json.error) throw new Error("There was a problem syncing your reports.")
 
     const courses = json.courses;
-    const [existingUser] = await db
-      .select()
-      .from(user)
-      .where(eq(user.studentId, studentId));
-
-    if (!existingUser) throw new Error("Could not find student: " + studentId);
     const userId = existingUser.id;
 
     await db.transaction(async (trx) => {
@@ -112,7 +125,10 @@ export default async function syncTA(studentId: string, password: string) {
       }
     });
   } catch (e) {
-    console.log(e);
-    throw new Error("There was an issue while syncing");
+    if (e instanceof Error) {
+      throw new Error(e.message);
+    }
+    console.error("Unexpected sync error:", e);
+    throw new Error("There was an unexpected issue while syncing");
   }
 }

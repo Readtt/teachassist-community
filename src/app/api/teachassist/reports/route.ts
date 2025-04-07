@@ -6,40 +6,58 @@ import { loginSchema } from "~/common/types/login";
 import { type ReportsResponse } from "~/common/types/reports";
 import type { Course } from "~/common/types/teachassist";
 import { tryCatch } from "~/server/helpers";
+import fetch from "node-fetch";
+import { env } from "~/env";
+import { auth } from "~/server/auth";
+import { headers } from "next/headers";
 
-const fetchCookie = makeFetchCookie(fetch);
+const fetchCookie = makeFetchCookie(
+  fetch,
+  new makeFetchCookie.toughCookie.CookieJar(),
+  false,
+);
 
 export async function POST(req: Request) {
   try {
+    const session = await auth.api.getSession({ headers: await headers() });
+    if (!session) {
+      return NextResponse.json(
+        { error: "You are unauthenticated", success: false },
+        { status: 401 },
+      );
+    }
+
     const bodyRaw = (await req.json()) as z.infer<typeof loginSchema>;
     const body = loginSchema.parse(bodyRaw);
     const { studentId, password } = body;
 
     const URL = `https://ta.yrdsb.ca/live/index.php?username=${studentId}&password=${password}&submit=Login&subject_id=0`;
-
     const loginResponse = await tryCatch(
-      fetchCookie(URL, {
+      fetchCookie("https://api.brightdata.com/request", {
         method: "POST",
-        body: "credentials",
+        body: JSON.stringify({
+          zone: env.BRIGHT_DATA_ZONE,
+          url: URL,
+          format: "raw",
+          method: "POST",
+        }),
+        headers: {
+          "content-type": "application/json",
+          authorization: `Bearer ${env.BRIGHT_DATA_TOKEN}`,
+        },
       }),
     );
 
-    if (loginResponse.error)
+    if (loginResponse.error) {
+      console.log(loginResponse.error);
       return NextResponse.json<ReportsResponse>(
         { error: "Teachassist is currently unavailable", courses: [] },
         { status: 503 },
       );
+    }
 
     const html = await tryCatch(loginResponse.data.text());
-    if (
-      html.error ||
-      [
-        "Invalid Login",
-        "Access Denied",
-        "Session Expired",
-        "YRDSB teachassist login",
-      ].some((err) => html.data.includes(err))
-    ) {
+    if (html.error || !html.data.includes("Student Reports")) {
       return NextResponse.json<ReportsResponse>(
         { error: "Invalid student number or password", courses: [] },
         { status: 401 },
@@ -146,7 +164,8 @@ export async function POST(req: Request) {
       { error: null, courses },
       { status: 200 },
     );
-  } catch {
+  } catch(e) {
+    console.log(e);
     return NextResponse.json<ReportsResponse>(
       { error: "There was an issue getting student reports", courses: [] },
       { status: 500 },

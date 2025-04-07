@@ -11,6 +11,8 @@ export const env = createEnv({
     BETTER_AUTH_SECRET: z.string(),
     BETTER_AUTH_URL: z.string().url(),
     TA_AUTH_SECRET: z.string(),
+    BRIGHT_DATA_TOKEN: z.string(),
+    BRIGHT_DATA_ZONE: z.string(),
     NODE_ENV: z
       .enum(["development", "test", "production"])
       .default("development"),
@@ -34,7 +36,9 @@ export const env = createEnv({
     NODE_ENV: process.env.NODE_ENV,
     BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET,
     BETTER_AUTH_URL: process.env.BETTER_AUTH_URL,
-    TA_AUTH_SECRET: process.env.TA_AUTH_SECRET
+    TA_AUTH_SECRET: process.env.TA_AUTH_SECRET,
+    BRIGHT_DATA_TOKEN: process.env.BRIGHT_DATA_TOKEN,
+    BRIGHT_DATA_ZONE: process.env.BRIGHT_DATA_ZONE
     // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
   },
   /**
