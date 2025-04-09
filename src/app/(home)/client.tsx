@@ -44,7 +44,7 @@ export default function Home({
     const { error } = await syncTAFromClient();
 
     if (error) {
-      toast.error(error.message);
+      toast.error(error);
     } else {
       toast.success("Synced teachassist data successfully.");
     }

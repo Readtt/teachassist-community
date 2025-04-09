@@ -9,7 +9,8 @@ import { course, user } from "./db/schema";
 export async function toggleAnonymous(code: string) {
   try {
     const session = await auth.api.getSession({ headers: await headers() });
-    if (!session) throw new Error("Unauthorized");
+    if (!session)
+      throw new Error("You must be logged in to perform this action");
 
     const userId = session.user.id;
 
@@ -29,7 +30,7 @@ export async function toggleAnonymous(code: string) {
 
     if (!existingCourse)
       throw new Error(
-        "Course not found, or you are not enrolled in the course.",
+        "No active course found with this code, or you are not enrolled in it. Please check the course code and your enrollment status",
       );
     const newAnonymousState = existingCourse.isAnonymous;
 
@@ -56,14 +57,16 @@ export async function toggleAnonymous(code: string) {
     }
 
     return {
-      error: "There was an unexpected issue while trying to toggle anonymity",
+      error:
+        "An unexpected error occurred while trying to toggle anonymity. Please try again or contact support",
     };
   }
 }
 
 export async function getStudentClassAnonymity(code: string) {
   const session = await auth.api.getSession({ headers: await headers() });
-  if (!session) throw new Error("Unauthorized");
+  if (!session)
+    throw new Error("You must be logged in to perform this action.");
 
   const currentDate = new Date().toISOString();
   const [studentClassAnonymity] = await db
@@ -85,7 +88,8 @@ export async function getStudentClassAnonymity(code: string) {
 
 export async function getClassAverage(code: string) {
   const session = await auth.api.getSession({ headers: await headers() });
-  if (!session) throw new Error("Unauthorized");
+  if (!session)
+    throw new Error("You must be logged in to perform this action.");
 
   const currentDate = new Date().toISOString();
 
@@ -116,7 +120,8 @@ export async function getClassAverage(code: string) {
 
 export async function getStudentClassRanking(code: string) {
   const session = await auth.api.getSession({ headers: await headers() });
-  if (!session) throw new Error("Unauthorized");
+  if (!session)
+    throw new Error("You must be logged in to perform this action.");
 
   const currentDate = new Date().toISOString();
   const studentRankings = await db
@@ -144,7 +149,8 @@ export async function getStudentClassRanking(code: string) {
 
 export async function getClassRankings(code: string) {
   const session = await auth.api.getSession({ headers: await headers() });
-  if (!session) throw new Error("Unauthorized");
+  if (!session)
+    throw new Error("You must be logged in to perform this action.");
 
   const currentDate = new Date().toISOString();
   const rankedCourses = await db
@@ -178,7 +184,8 @@ export async function getClassRankings(code: string) {
 
 export async function getActiveClasses() {
   const session = await auth.api.getSession({ headers: await headers() });
-  if (!session) throw new Error("Unauthorized");
+  if (!session)
+    throw new Error("You must be logged in to perform this action.");
 
   const currentDate = new Date().toISOString();
 
@@ -199,7 +206,8 @@ export async function getActiveClasses() {
 
 export async function getPastClasses() {
   const session = await auth.api.getSession({ headers: await headers() });
-  if (!session) throw new Error("Unauthorized");
+  if (!session)
+    throw new Error("You must be logged in to perform this action.");
 
   const currentDate = new Date().toISOString(); // Ensure correct format
 

@@ -63,7 +63,7 @@ export async function loginTA(
 export default async function syncTA() {
   try {
     const session = await auth.api.getSession({ headers: await headers() });
-    if (!session) throw new Error("Unauthorized");
+    if (!session) throw new Error("You must be logged in to perform this action.");
 
     const studentId = session.user.studentId;
     const password = decryptPassword(session.user.taPassword);
@@ -148,12 +148,16 @@ export default async function syncTA() {
           .where(eq(user.id, userId));
       }
     });
+
+    return { data: { success: true } };
   } catch (e) {
     if (e instanceof Error) {
-      throw new Error(e.message);
+      return { error: e.message };
     }
 
-    throw new Error("There was an unexpected error while syncing");
+    return {
+      error: "There was an unexpected error while syncing",
+    };
   }
 }
 
