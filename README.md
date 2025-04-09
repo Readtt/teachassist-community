@@ -12,7 +12,7 @@
 - [x] Buy bright data credits
 - [ ] Create school identifier  
 - [ ] Search all classes  
-- [ ] Add CRON job for auto sync
+- [ ] Add CRON job for auto sync per week
 - [ ] Create a global classes switch  
 - [ ] Use react router or tRPC 
 - [ ] Use toolip proxy

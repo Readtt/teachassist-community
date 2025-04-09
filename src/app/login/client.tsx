@@ -95,7 +95,7 @@ export default function Login() {
               <div className="mb-6 flex flex-col items-center text-center">
                 <Link href="/" className="mb-6 flex items-center gap-2">
                   <Logo className="h-8 w-8" />
-                  <h1 className="text-2xl font-bold">Teachassist Community</h1>
+                  <h1 className="text-xl font-bold">Teachassist Community</h1>
                 </Link>
               </div>
               <Form {...form}>
