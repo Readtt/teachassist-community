@@ -21,6 +21,10 @@ const navigationLinks = [
     name: "Leaderboard",
     href: "/leaderboard",
   },
+  {
+    name: "Updates",
+    href:"/updates"
+  }
 ] as const;
 
 export default function Navbar({ session }: { session: Session }) {
@@ -61,12 +65,12 @@ export default function Navbar({ session }: { session: Session }) {
           )}
         >
           <div className="container">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-2.5">
               <div
                 onClick={() => {
                   router.push("/");
                 }}
-                className="mr-6 flex cursor-pointer items-center gap-2"
+                className="flex cursor-pointer items-center gap-2 w-min md:whitespace-nowrap mr-4"
               >
                 <Logo className="h-6 w-6" />
                 <h1 className="text-md font-semibold tracking-tight md:text-lg">
@@ -87,7 +91,7 @@ export default function Navbar({ session }: { session: Session }) {
                 ))}
               </div>
               <div className="hidden items-center gap-4 lg:flex">
-                <p className="text-muted-foreground text-sm tracking-tighter">
+                <p className="text-muted-foreground text-sm tracking-tighter text-right">
                   Signed in as {session.user.name}
                 </p>
                 <ThemeToggle />
