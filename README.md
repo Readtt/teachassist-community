@@ -7,6 +7,8 @@
 - [x] Refactor sync as server action
 - [x] Refactor toggle anonymous in queries.ts
 - [ ] Remove past classes- may cause issues (remove when syncing)
+- [ ] Sort classes by period
+- [ ] Make revalidate faster? TRPC
 - [ ] Create school identifier  
 - [ ] Search all classes  
 - [ ] Create a global classes switch  

@@ -70,7 +70,7 @@ export default function Leaderboard({
     setIsSettingAnonymous(true);
     const {error, data} = await toggleAnonymousFromClient(classCode);
     if (error) {
-      toast.error(error.message);
+      toast.error(error);
     } else {
       if (data?.isAnonymous) {
         toast.success("Your student ID is private.");

@@ -7,42 +7,58 @@ import { db } from "./db";
 import { course, user } from "./db/schema";
 
 export async function toggleAnonymous(code: string) {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session) throw new Error("Unauthorized");
+  try {
+    const session = await auth.api.getSession({ headers: await headers() });
+    if (!session) throw new Error("Unauthorized");
 
-  const userId = session.user.id;
+    const userId = session.user.id;
 
-  const currentDate = new Date().toISOString();
-  const [existingCourse] = await db
-    .select()
-    .from(course)
-    .where(
-      and(
-        eq(course.code, code),
-        eq(course.userId, userId),
-        sql`(${course.times}->>'startTime')::timestamptz <= ${currentDate}::timestamptz`,
-        sql`(${course.times}->>'endTime')::timestamptz >= ${currentDate}::timestamptz`,
-      ),
-    )
-    .limit(1);
+    const currentDate = new Date().toISOString();
+    const [existingCourse] = await db
+      .select()
+      .from(course)
+      .where(
+        and(
+          eq(course.code, code),
+          eq(course.userId, userId),
+          sql`(${course.times}->>'startTime')::timestamptz <= ${currentDate}::timestamptz`,
+          sql`(${course.times}->>'endTime')::timestamptz >= ${currentDate}::timestamptz`,
+        ),
+      )
+      .limit(1);
 
-  if (!existingCourse)
-    throw new Error("Course not found, or you are not enrolled in the course.");
-  const newAnonymousState = existingCourse.isAnonymous;
+    if (!existingCourse)
+      throw new Error(
+        "Course not found, or you are not enrolled in the course.",
+      );
+    const newAnonymousState = existingCourse.isAnonymous;
 
-  await db
-    .update(course)
-    .set({ isAnonymous: !newAnonymousState })
-    .where(
-      and(
-        eq(course.code, code),
-        eq(course.userId, userId),
-        sql`(${course.times}->>'startTime')::timestamptz <= ${currentDate}::timestamptz`,
-        sql`(${course.times}->>'endTime')::timestamptz >= ${currentDate}::timestamptz`,
-      ),
-    );
+    await db
+      .update(course)
+      .set({ isAnonymous: !newAnonymousState })
+      .where(
+        and(
+          eq(course.code, code),
+          eq(course.userId, userId),
+          sql`(${course.times}->>'startTime')::timestamptz <= ${currentDate}::timestamptz`,
+          sql`(${course.times}->>'endTime')::timestamptz >= ${currentDate}::timestamptz`,
+        ),
+      );
 
-  return { isAnonymous: !newAnonymousState };
+    return {
+      data: {
+        isAnonymous: !newAnonymousState,
+      },
+    };
+  } catch (e) {
+    if (e instanceof Error) {
+      return { error: e.message };
+    }
+
+    return {
+      error: "There was an unexpected issue while trying to toggle anonymity",
+    };
+  }
 }
 
 export async function getStudentClassAnonymity(code: string) {
