@@ -8,7 +8,3 @@ export const loginSchema = z.object({
     message: "Password must be at least 1 character.",
   }),
 });
-
-export interface LoginResponse {
-  error: string | null;
-}

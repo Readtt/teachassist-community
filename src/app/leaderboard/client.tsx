@@ -8,7 +8,8 @@ import {
   UsersIcon,
 } from "lucide-react";
 import { redirect } from "next/navigation";
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useState } from "react";
+import { toast } from "sonner";
 import StatCard from "~/components/stat-card";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
@@ -30,16 +31,14 @@ import {
   TableRow,
 } from "~/components/ui/table";
 import type { Session } from "~/lib/auth-client";
-import type {
-  getActiveClasses,
-  getClassAverage,
-  getClassRankings,
-  getStudentClassAnonymity,
-  getStudentClassRanking,
+import {
+  type getActiveClasses,
+  type getClassAverage,
+  type getClassRankings,
+  type getStudentClassAnonymity,
+  type getStudentClassRanking
 } from "~/server/queries";
-import { toggleAnonymous } from "./actions";
-import { tryCatch } from "~/server/helpers";
-import { toast } from "sonner";
+import { toggleAnonymousFromClient } from "./actions";
 
 export default function Leaderboard({
   activeClasses,
@@ -69,7 +68,7 @@ export default function Leaderboard({
     }
 
     setIsSettingAnonymous(true);
-    const { error, data } = await tryCatch(toggleAnonymous(classCode));
+    const {error, data} = await toggleAnonymousFromClient(classCode);
     if (error) {
       toast.error(error.message);
     } else {
@@ -82,10 +81,6 @@ export default function Leaderboard({
 
     setIsSettingAnonymous(false);
   }
-
-  useEffect(() => {
-    console.log(isAnonymous);
-  }, [isAnonymous]);
 
   return (
     <main className="container py-12">
@@ -104,7 +99,7 @@ export default function Leaderboard({
             See how you compare to other students
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <Button
             onClick={handleToggleAnonymity}
             isLoading={isSettingAnonymous}
@@ -179,7 +174,11 @@ export default function Leaderboard({
             <StatCard
               title={`Class Average`}
               description={`Among all ${classCode} students`}
-              value={classAverage ? (Math.round(classAverage * 100) / 100) + "%" : "N/A"}
+              value={
+                classAverage
+                  ? Math.round(classAverage * 100) / 100 + "%"
+                  : "N/A"
+              }
               icon={UsersIcon}
               iconColor={
                 classAverage == null

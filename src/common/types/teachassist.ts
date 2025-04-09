@@ -33,10 +33,6 @@ export interface Category {
   max: number;
 }
 
-export type LoginTA = {
+export interface LoginTA {
   html: string;
-  credentials: {
-    studentId: string;
-    password: string;
-  };
 };

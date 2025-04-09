@@ -1,239 +1,284 @@
-// DEPRICATED in favour of new /reports and /login route
+import "server-only";
 
-// import { load, type Cheerio } from "cheerio";
-// import { ElementType } from "domelementtype";
-// import { type AnyNode } from "domhandler";
-// import type { Assignment, Course, LoginTA } from "~/common/types/teachassist";
-// import { tryCatch } from "./helpers";
-// import makeFetchCookie from 'fetch-cookie'
+import { load } from "cheerio";
+import { and, eq } from "drizzle-orm";
+import makeFetchCookie from "fetch-cookie";
+import { headers } from "next/headers";
+import fetch from "node-fetch";
+import { v4 as uuidv4 } from "uuid";
+import type { Course, LoginTA } from "~/common/types/teachassist";
+import { env } from "~/env";
+import { decryptPassword } from "~/lib/crypto";
+import { auth } from "./auth";
+import { db } from "./db";
+import { course, user } from "./db/schema";
+import { tryCatch } from "./helpers";
 
-// const fetchCookie = makeFetchCookie(fetch)
+const fetchCookie = makeFetchCookie(
+  fetch,
+  new makeFetchCookie.toughCookie.CookieJar(),
+  false,
+);
 
-// export async function loginTA(
-//   studentId: string,
-//   password: string,
-// ): Promise<LoginTA> {
-//   const URL = `https://ta.yrdsb.ca/live/index.php?username=${studentId}&password=${password}&submit=Login&subject_id=0`;
+export async function loginTA(
+  studentId?: string,
+  password?: string,
+): Promise<LoginTA> {
+  if (!studentId || !password)
+    throw new Error("Invalid student number or password");
 
-//   const loginResponse = await tryCatch(
-//     fetchCookie(URL, { method: "POST", body: "credentials", redirect: "follow" }),
-//   );
-//   if (loginResponse.error)
-//     throw new Error("Teachassist is currently unavailable");
+  const URL = `https://ta.yrdsb.ca/live/index.php?username=${studentId}&password=${password}&submit=Login&subject_id=0`;
+  const loginResponse = await tryCatch(
+    fetchCookie("https://api.brightdata.com/request", {
+      method: "POST",
+      body: JSON.stringify({
+        zone: env.BRIGHT_DATA_ZONE,
+        url: URL,
+        format: "raw",
+        method: "POST",
+      }),
+      headers: {
+        "content-type": "application/json",
+        authorization: `Bearer ${env.BRIGHT_DATA_TOKEN}`,
+      },
+    }),
+  );
 
-//   const html = await tryCatch(loginResponse.data.text());
-//   if (
-//     html.error ||
-//     ["Invalid Login", "Access Denied", "Session Expired", "YRDSB teachassist login"].some((err) =>
-//       html.data.includes(err),
-//     )
-//   ) {
-//     throw new Error("Invalid student number or password");
-//   }
+  if (loginResponse.error) {
+    // 503 error
+    throw new Error("Teachassist is currently unavailable");
+  }
 
-//   return { html: html.data, credentials: { studentId, password } };
-// }
+  const html = await tryCatch(loginResponse.data.text());
+  if (html.error || !html.data.includes("Student Reports")) {
+    // 401 error
+    throw new Error("Invalid student number or password");
+  }
 
-// export async function getStudentTAInfo(
-//   studentId: string,
-//   password: string,
-// ): Promise<Course[]> {
-//   const { error, data } = await tryCatch(loginTA(studentId, password));
-//   if (error) throw error;
+  return {
+    html: html.data,
+  };
+}
 
-//   const { error: courseError, data: courseData } = await tryCatch(
-//     getCourseInfo(data),
-//   );
+export default async function syncTA() {
+  try {
+    const session = await auth.api.getSession({ headers: await headers() });
+    if (!session) throw new Error("Unauthorized");
 
-//   if (courseError) throw courseError;
+    const studentId = session.user.studentId;
+    const password = decryptPassword(session.user.taPassword);
 
-//   return [...courseData];
-// }
+    const [existingUser] = await db
+      .select()
+      .from(user)
+      .where(eq(user.studentId, studentId));
 
-// async function getCourseInfo(loginData: LoginTA): Promise<Course[]> {
-//   const $ = load(loginData.html);
-//   const courses: Course[] = [];
+    if (!existingUser) throw new Error("Could not find student: " + studentId);
 
-//   for (const elem of $(".green_border_message div table tr")) {
-//     try {
-//       const link = $(elem).find("a").attr("href") ?? null;
-//       const courseData = $(elem)
-//         .text()
-//         .split("\n")
-//         .map((c) => c.trim())
-//         .filter((c) => c.length > 0);
+    const lastSynced = existingUser.lastSyncedAt;
+    const now = new Date();
 
-//       if (
-//         courseData.length <= 3 ||
-//         !courseData[1] ||
-//         courseData[1].includes("Course Name")
-//       )
-//         continue;
+    if (lastSynced) {
+      const oneDayAgo = new Date();
+      oneDayAgo.setDate(now.getDate() - 1);
 
-//       const [courseInfo, blockInfo, rawStartTime, timeInfo, mark] = courseData;
+      if (lastSynced > oneDayAgo) {
+        throw new Error("You can only sync once every 24 hours.");
+      }
+    }
 
-//       const [rawCode, rawName] = courseInfo?.split(" : ") ?? [];
-//       const code = rawCode
-//         ?.replace(":", "")
-//         .trim()
-//         .replace("Hodan Nalayeh Secondary School - ", "");
-//       const name = rawName ?? null;
-//       const startTime = new Date(rawStartTime?.split("~")[0]?.trim() ?? "");
-//       const hasDropped = timeInfo?.includes("Dropped on");
-//       const rawBlock = blockInfo
-//         .replace("Block: ", "")
-//         .trim()
-//         .split(" - ")[0]
-//         ?.trim();
-//       const block = Number(rawBlock?.replace(/[^0-9]/g, ""));
-//       const room = blockInfo.split("rm. ")[1];
+    const { data: courses, error } = await tryCatch(
+      getTAReports({ studentId, password }),
+    );
+    if (error) throw error;
 
-//       const endTime = new Date(
-//         (hasDropped
-//           ? timeInfo?.split("Dropped")[0]?.trim()
-//           : timeInfo?.trim()) ?? "",
-//       );
+    const userId = existingUser.id;
 
-//       const droppedTime = new Date(
-//         (hasDropped ? timeInfo?.split("Dropped on")[1]?.trim() : null) ?? "",
-//       );
+    await db.transaction(async (trx) => {
+      for (const c of courses) {
+        const [existingCourse] = await trx
+          .select()
+          .from(course)
+          .where(
+            and(
+              eq(course.code, c.code),
+              eq(course.userId, userId),
+              eq(course.room, c.room),
+            ),
+          );
 
-//       const markInfo = getMark(mark);
+        const courseId = existingCourse?.id ?? uuidv4();
 
-//       if (!code || !startTime || !endTime || !block || !room) continue;
+        if (existingCourse) {
+          await trx
+            .update(course)
+            .set({
+              code: c.code,
+              name: c.name ?? existingCourse.name,
+              block: c.block.toString(),
+              room: c.room,
+              times: c.times,
+              overallMark: (
+                c.overallMark ?? existingCourse.overallMark
+              )?.toString(),
+              isFinal: c.isFinal,
+              isMidterm: c.isMidterm,
+              link: c.link ?? existingCourse.link,
+            })
+            .where(eq(course.id, courseId));
+        } else {
+          await trx.insert(course).values({
+            id: courseId,
+            code: c.code,
+            name: c.name,
+            block: c.block.toString(),
+            room: c.room,
+            times: c.times,
+            overallMark: c.overallMark?.toString(),
+            isFinal: c.isFinal,
+            isMidterm: c.isMidterm,
+            link: c.link,
+            userId,
+          });
+        }
 
-//       const course: Course = {
-//         code,
-//         name,
-//         block,
-//         room,
-//         times: {
-//           startTime,
-//           endTime,
-//           droppedTime,
-//         },
-//         ...markInfo,
-//         link,
-//         assignments: [],
-//       };
+        await trx
+          .update(user)
+          .set({ lastSyncedAt: new Date() })
+          .where(eq(user.id, userId));
+      }
+    });
+  } catch (e) {
+    if (e instanceof Error) {
+      throw new Error(e.message);
+    }
 
-//       // const assignments = await getAssignments(course);
-//       // course.assignments = assignments;
+    throw new Error("There was an unexpected error while syncing");
+  }
+}
 
-//       courses.push(course);
-//     } catch (e) {
-//       console.log(e);
-//       console.log("Error with pushing course");
-//     }
-//   }
+async function getTAReports({
+  studentId,
+  password,
+  html,
+}: {
+  studentId?: string;
+  password?: string;
+  html?: string;
+}): Promise<Course[]> {
+  const hasCredentials = studentId && password;
+  const hasHtml = !!html;
 
-//   return courses;
-// }
+  if (!(hasCredentials || hasHtml) || (hasCredentials && hasHtml)) {
+    throw new Error(
+      "You must provide either both studentId and password, or just html.",
+    );
+  }
 
-// async function getAssignments(course: Course): Promise<Assignment[]> {
-//   const assignments: Assignment[] = [];
+  let htmlContent: string;
 
-//   if (course.link == null) {
-//     return [];
-//   }
+  if (html) {
+    htmlContent = html;
+  } else {
+    const { data, error } = await tryCatch(loginTA(studentId, password));
+    if (error) throw error;
+    htmlContent = data.html;
+  }
 
-//   const { error, data: courseResponse } = await tryCatch(
-//     fetch(`https://ta.yrdsb.ca/live/students/${course.link}`, {
-//       method: "POST",
-//       body: "credentials",
-//     }),
-//   );
-//   if (error) throw error;
+  const $ = load(htmlContent);
+  const courses: Course[] = [];
 
-//   const $ = load(await courseResponse.text());
+  for (const elem of $(".green_border_message div table tr")) {
+    try {
+      const link = $(elem).find("a").attr("href") ?? null;
+      const courseData = $(elem)
+        .text()
+        .split("\n")
+        .map((c) => c.trim())
+        .filter((c) => c.length > 0);
 
-//   $('table[width="100%"] tr').each((i, elem) => {
-//     if (i === 0) return;
+      if (
+        courseData.length <= 3 ||
+        !courseData[1] ||
+        courseData[1].includes("Course Name")
+      )
+        continue;
 
-//     const assignmentName =
-//       $(elem).find('td[rowspan="2"]').text().trim() ?? null;
-//     if (!assignmentName) return;
+      const [courseInfo, blockInfo, rawStartTime, timeInfo, mark] = courseData;
 
-//     const KU_color = "ffffaa";
-//     const T_color = "c0fea4";
-//     const C_color = "afafff";
-//     const A_color = "ffd490";
-//     const O_color = "dedede";
+      const [rawCode, rawName] = courseInfo?.split(" : ") ?? [];
+      const code = rawCode
+        ?.replace(":", "")
+        .trim()
+        .replace("Hodan Nalayeh Secondary School - ", "");
+      const name = rawName ?? null;
+      const startTime = new Date(rawStartTime?.split("~")[0]?.trim() ?? "");
+      const hasDropped = timeInfo?.includes("Dropped on");
+      const rawBlock = blockInfo
+        .replace("Block: ", "")
+        .trim()
+        .split(" - ")[0]
+        ?.trim();
+      const block = Number(rawBlock?.replace(/[^0-9]/g, ""));
+      const room = blockInfo.split("rm. ")[1];
 
-//     const KU = $(elem).find(`td[bgcolor="${KU_color}"]`);
-//     const T = $(elem).find(`td[bgcolor="${T_color}"]`);
-//     const C = $(elem).find(`td[bgcolor="${C_color}"]`);
-//     const A = $(elem).find(`td[bgcolor="${A_color}"]`);
-//     const O = $(elem).find(`td[bgcolor="${O_color}"]`);
+      const endTime = new Date(
+        (hasDropped
+          ? timeInfo?.split("Dropped")[0]?.trim()
+          : timeInfo?.trim()) ?? "",
+      );
 
-//     assignments.push({
-//       name: assignmentName,
-//       feedback: null,
-//       categories: {
-//         KU: createCategory(KU),
-//         T: createCategory(T),
-//         C: createCategory(C),
-//         A: createCategory(A),
-//         O: createCategory(O),
-//       },
-//     });
-//   });
+      const droppedTime = new Date(
+        (hasDropped ? timeInfo?.split("Dropped on")[1]?.trim() : null) ?? "",
+      );
 
-//   return assignments;
-// }
+      const markInfo = getMark(mark);
 
-// function getWeight(elem: Cheerio<AnyNode>): number {
-//   const text = elem.find('td font[size="-2"]').text().trim();
-//   return text === "no weight" ? 0 : Number(/\d+/.exec(text)?.[0] ?? 0);
-// }
+      if (!code || !startTime || !endTime || !block || !room) continue;
 
-// function getScore(elem: Cheerio<AnyNode>) {
-//   const equation = elem
-//     .find("td")
-//     .first()
-//     .contents()
-//     .filter((_, e) => e.type === ElementType.Text)
-//     .text()
-//     .trim()
-//     .split("=")[0]
-//     ?.trim();
-//   const score = equation?.split("/").map(Number) ?? [];
-//   return { scored: score[0], max: score[1] };
-// }
+      const course: Course = {
+        code,
+        name,
+        block,
+        room,
+        times: {
+          startTime,
+          endTime,
+          droppedTime,
+        },
+        ...markInfo,
+        link,
+        assignments: [],
+      };
 
-// function createCategory(elem: Cheerio<AnyNode>) {
-//   if (!elem.children().length) return null;
+      courses.push(course);
+    } catch {}
+  }
 
-//   const { scored, max } = getScore(elem);
-//   if (!max || !scored) return null;
+  function getMark(rawMark?: string) {
+    if (!rawMark)
+      return { overallMark: null, isFinal: false, isMidterm: false };
 
-//   return {
-//     weight: getWeight(elem),
-//     scored,
-//     max,
-//   };
-// }
+    const cleanMark = rawMark.replace(/\s/g, "");
+    const patterns = [
+      { key: "FINALMARK:", isFinal: true, isMidterm: false },
+      { key: "currentmark=", isFinal: false, isMidterm: false },
+      { key: "MIDTERMMARK:", isFinal: false, isMidterm: true },
+    ];
 
-// function getMark(rawMark?: string) {
-//   if (!rawMark) return { overallMark: null, isFinal: false, isMidterm: false };
+    for (const { key, isFinal, isMidterm } of patterns) {
+      if (cleanMark.includes(key)) {
+        const splitMark = cleanMark.split(key);
+        const markPart = splitMark[1]?.split("%")[0];
+        if (markPart !== undefined) {
+          const overallMark = parseFloat(markPart);
+          return { overallMark, isFinal, isMidterm };
+        }
+      }
+    }
 
-//   const cleanMark = rawMark.replace(/\s/g, "");
-//   const patterns = [
-//     { key: "FINALMARK:", isFinal: true, isMidterm: false },
-//     { key: "currentmark=", isFinal: false, isMidterm: false },
-//     { key: "MIDTERMMARK:", isFinal: false, isMidterm: true },
-//   ];
+    return { overallMark: null, isFinal: false, isMidterm: false };
+  }
 
-//   for (const { key, isFinal, isMidterm } of patterns) {
-//     if (cleanMark.includes(key)) {
-//       const splitMark = cleanMark.split(key);
-//       const markPart = splitMark[1]?.split("%")[0];
-//       if (markPart !== undefined) {
-//         const overallMark = parseFloat(markPart);
-//         return { overallMark, isFinal, isMidterm };
-//       }
-//     }
-//   }
-
-//   return { overallMark: null, isFinal: false, isMidterm: false };
-// }
+  return courses;
+}

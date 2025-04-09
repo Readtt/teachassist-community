@@ -2,7 +2,7 @@
 
 import { MenuIcon, XIcon } from "lucide-react";
 import Link from "next/link";
-import { redirect, usePathname } from "next/navigation";
+import { redirect, usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "~/components/ui/button";
@@ -23,16 +23,23 @@ const navigationLinks = [
 ] as const;
 
 export default function Navbar({ session }: { session: Session }) {
+  const router = useRouter();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
-    const { error } = await authClient.signOut();
-    if (error) toast.error(error.message);
-
-    redirect("/login");
+    await authClient.signOut({
+      fetchOptions: {
+        onSuccess: async () => {
+          router.push("/login");
+        },
+        onError: (e) => {
+          toast.error(e.error.message);
+        },
+      },
+    });
   };
 
   return (
@@ -81,6 +88,8 @@ export default function Navbar({ session }: { session: Session }) {
                 Logout
               </Button>
             </div>
+            <div className="flex gap-1 items-center">
+            <ThemeToggle className="lg:hidden"/>
             <Button
               size={"icon"}
               variant={"ghost"}
@@ -93,6 +102,7 @@ export default function Navbar({ session }: { session: Session }) {
                 <MenuIcon className="scale-125" />
               )}
             </Button>
+            </div>
           </div>
         </div>
       </div>

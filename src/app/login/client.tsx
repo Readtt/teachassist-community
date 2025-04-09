@@ -7,7 +7,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { type z } from "zod";
-import { loginSchema } from "~/common/types/login";
+import { loginSchema } from "~/common/types/client-login";
 import { Button } from "~/components/ui/button";
 import {
   Form,
@@ -22,6 +22,7 @@ import { Input } from "~/components/ui/input";
 import { authClient } from "~/lib/auth-client";
 import { studentIdToEmail } from "~/lib/utils";
 import Logo from "../_components/logo";
+import { doesUserExistByEmail } from "./actions";
 
 export default function Login() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -36,41 +37,51 @@ export default function Login() {
 
   async function onSubmit(values: z.infer<typeof loginSchema>) {
     setIsLoading(true);
-    await authClient.signUp.email(
-      {
-        email: studentIdToEmail(values.studentId),
-        password: values.password,
-        name: values.studentId,
-        taPassword: values.password,
-        studentId: values.studentId,
-      },
-      {
-        onSuccess: () => {
-          toast.success("Account created successfully.");
-          redirect("/?created=true");
-        },
-        onError: async (ctx) => {
-          if (ctx.error.code === "USER_ALREADY_EXISTS") {
-            await authClient.signIn.email(
-              {
-                email: studentIdToEmail(values.studentId),
-                password: values.password,
-              },
-              {
-                onSuccess: () => {
-                  redirect("/");
-                },
-                onError: (e) => {
-                  toast.error(e.error.message ?? "There was an issue encountered while logging in.");
-                },
-              },
-            );
-          } else {
-            toast.error(ctx.error.message);
-          }
-        },
-      },
+    const userExists = await doesUserExistByEmail(
+      studentIdToEmail(values.studentId),
     );
+
+    if (userExists) {
+      await authClient.signIn.email(
+        {
+          email: studentIdToEmail(values.studentId),
+          password: values.password,
+        },
+        {
+          onSuccess: () => {
+            redirect("/");
+          },
+          onError: async (ctx) => {
+            toast.error(
+              ctx.error.message ??
+                "There was an issue encountered while signing in.",
+            );
+          },
+        },
+      );
+    } else {
+      await authClient.signUp.email(
+        {
+          email: studentIdToEmail(values.studentId),
+          password: values.password,
+          name: values.studentId,
+          taPassword: values.password,
+          studentId: values.studentId,
+        },
+        {
+          onSuccess: () => {
+            toast.success("Account created successfully.");
+            redirect("/?created=true");
+          },
+          onError: (e) => {
+            toast.error(
+              e.error.message ??
+                "There was an issue encountered while signing up.",
+            );
+          },
+        },
+      );
+    }
 
     setIsLoading(false);
   }

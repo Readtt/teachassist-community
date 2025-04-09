@@ -1,10 +1,9 @@
 "use client";
 
 import { ChartLineIcon, RefreshCcw, UserIcon } from "lucide-react";
-import { redirect, useRouter, useSearchParams } from "next/navigation";
+import { redirect, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import type { SyncResponse } from "~/common/types/sync";
 import StatCard from "~/components/stat-card";
 import { Button } from "~/components/ui/button";
 import {
@@ -16,10 +15,10 @@ import {
 } from "~/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import type { Session } from "~/lib/auth-client";
-import { tryCatch } from "~/server/helpers";
 import type { getActiveClasses, getPastClasses } from "~/server/queries";
 import ClassCard from "./_components/class-card";
 import ClassPlaceholder from "./_components/class-placeholder";
+import { syncTAFromClient } from "./actions";
 
 export default function Home({
   session,
@@ -30,7 +29,6 @@ export default function Home({
   activeClasses: Awaited<ReturnType<typeof getActiveClasses>>;
   pastClasses: Awaited<ReturnType<typeof getPastClasses>>;
 }) {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const [open, setOpen] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -43,16 +41,15 @@ export default function Home({
 
   async function handleSync() {
     setIsSyncing(true);
-    const { error, data } = await tryCatch(
-      fetch("/api/sync", { method: "POST" }),
-    );
+    const { error } = await syncTAFromClient();
 
-    if (error) toast.error(error.message);
-    const { error: syncError, success } = (await data?.json()) as SyncResponse;
-    if (syncError) toast.error(syncError);
-    if (success) toast.success("Synced teachassist data successfully.");
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success("Synced teachassist data successfully.");
+    }
+
     setIsSyncing(false);
-    router.refresh();
   }
 
   return (
@@ -67,7 +64,7 @@ export default function Home({
             Here&apos;s what&apos;s happening with your account today.
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <Button
             onClick={handleSync}
             LoadingIcon={RefreshCcw}

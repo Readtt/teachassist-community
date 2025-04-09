@@ -19,7 +19,7 @@ export default function StatCard(stat: {
   return (
     <Card className="gap-2 py-4 pb-6">
       <CardHeader>
-        <CardTitle className="flex flex-1 items-center justify-between text-lg tracking-tight">
+        <CardTitle className="flex flex-1 items-center justify-between text-lg tracking-tight gap-1">
           {stat.title}
           <stat.icon
             className={`bg-muted h-8 w-8 rounded-full p-1.5 text-white ${stat.iconColor}`}
