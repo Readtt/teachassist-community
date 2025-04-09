@@ -1,7 +1,7 @@
 import "server-only";
 
 import { load } from "cheerio";
-import { and, eq } from "drizzle-orm";
+import { and, eq, or, sql } from "drizzle-orm";
 import makeFetchCookie from "fetch-cookie";
 import { headers } from "next/headers";
 import fetch from "node-fetch";
@@ -79,11 +79,19 @@ export default async function syncTA() {
     const now = new Date();
 
     if (lastSynced) {
-      const oneDayAgo = new Date();
-      oneDayAgo.setDate(now.getDate() - 1);
-
-      if (lastSynced > oneDayAgo) {
-        throw new Error("You can only sync once every 24 hours.");
+      const twelveHoursAgo = new Date();
+      twelveHoursAgo.setHours(now.getHours() - 12);
+    
+      if (lastSynced > twelveHoursAgo) {
+        const nextAllowedSync = new Date(lastSynced.getTime() + 12 * 60 * 60 * 1000);
+        const diffMs = nextAllowedSync.getTime() - now.getTime();
+    
+        const hours = Math.floor(diffMs / (1000 * 60 * 60));
+        const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+    
+        throw new Error(
+          `You can only sync once every 12 hours. Try again in ${hours}h ${minutes}m.`
+        );
       }
     }
 
@@ -93,8 +101,20 @@ export default async function syncTA() {
     if (error) throw error;
 
     const userId = existingUser.id;
+    const nowISO = now.toISOString();
 
     await db.transaction(async (trx) => {
+      // Delete outdated courses
+      await trx
+      .delete(course)
+      .where(and(
+        eq(course.userId, userId),
+        or(
+          sql`(${course.times}->>'endTime')::timestamptz < ${nowISO}::timestamptz`,
+          sql`(${course.times}->>'startTime')::timestamptz > ${nowISO}::timestamptz`
+        )
+      ));
+
       for (const c of courses) {
         const [existingCourse] = await trx
           .select()
@@ -103,7 +123,6 @@ export default async function syncTA() {
             and(
               eq(course.code, c.code),
               eq(course.userId, userId),
-              eq(course.room, c.room),
             ),
           );
 

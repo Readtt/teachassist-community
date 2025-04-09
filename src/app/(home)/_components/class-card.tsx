@@ -5,11 +5,10 @@ import { Badge } from "~/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { Progress } from "~/components/ui/progress";
 import { cn } from "~/lib/utils";
-import type { getActiveClasses, getPastClasses } from "~/server/queries";
+import type { getUserClasses } from "~/server/queries";
 
 type ClassCardProps =
-  | Awaited<ReturnType<typeof getActiveClasses>>[number]
-  | Awaited<ReturnType<typeof getPastClasses>>[number];
+  | Awaited<ReturnType<typeof getUserClasses>>[number]
 export default function ClassCard({
   room,
   name,

@@ -5,11 +5,11 @@ import { redirect } from "next/navigation";
 import { Fragment } from "react";
 import { auth } from "~/server/auth";
 import {
-  getActiveClasses,
   getClassAverage,
   getClassRankings,
   getStudentClassAnonymity,
   getStudentClassRanking,
+  getUserClasses,
 } from "~/server/queries";
 import Navbar from "../_components/navbar";
 import Leaderboard from "./client";
@@ -24,10 +24,10 @@ export default async function Page({
   });
   if (!session) redirect("/login");
 
-  const activeClasses = await getActiveClasses();
+  const userClasses = await getUserClasses();
   const params = await searchParams;
   const classCode =
-    params?.code ?? activeClasses[activeClasses.length - 1]?.code ?? null;
+    params?.code ?? userClasses[userClasses.length - 1]?.code ?? null;
 
   const classRankings = classCode ? await getClassRankings(classCode) : [];
   const studentClassRanking = classCode
@@ -45,7 +45,7 @@ export default async function Page({
       <Navbar session={session} />
       <Leaderboard
         session={session}
-        activeClasses={activeClasses}
+        userClasses={userClasses}
         classCode={classCode}
         classRankings={classRankings}
         studentClassRanking={studentClassRanking}

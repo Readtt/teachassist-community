@@ -15,19 +15,19 @@ import {
 } from "~/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import type { Session } from "~/lib/auth-client";
-import type { getActiveClasses, getPastClasses } from "~/server/queries";
+import type {
+  getUserClasses
+} from "~/server/queries";
 import ClassCard from "./_components/class-card";
 import ClassPlaceholder from "./_components/class-placeholder";
 import { syncTAFromClient } from "./actions";
 
 export default function Home({
   session,
-  activeClasses,
-  pastClasses,
+  userClasses,
 }: {
   session: Session;
-  activeClasses: Awaited<ReturnType<typeof getActiveClasses>>;
-  pastClasses: Awaited<ReturnType<typeof getPastClasses>>;
+  userClasses: Awaited<ReturnType<typeof getUserClasses>>;
 }) {
   const searchParams = useSearchParams();
   const [open, setOpen] = useState(false);
@@ -64,7 +64,7 @@ export default function Home({
             Here&apos;s what&apos;s happening with your account today.
           </p>
         </div>
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex flex-wrap items-center gap-2">
           <Button
             onClick={handleSync}
             LoadingIcon={RefreshCcw}
@@ -96,7 +96,7 @@ export default function Home({
         <StatCard
           title="Active Classes"
           description="Classes this semester"
-          value={activeClasses.length.toString()}
+          value={userClasses.length.toString()}
           icon={UserIcon}
           iconColor="stroke-blue-500"
         />
@@ -107,32 +107,17 @@ export default function Home({
           <h1 className="text-2xl font-semibold">Your Classes</h1>
           <TabsList>
             <TabsTrigger value="current">Current</TabsTrigger>
-            <TabsTrigger value="past">Past</TabsTrigger>
           </TabsList>
         </div>
         <TabsContent value="current" className="mt-2">
-          {activeClasses.length === 0 ? (
+          {userClasses.length === 0 ? (
             <ClassPlaceholder
               title="Active Classes"
               description="Your active classes will appear here. Click Sync Data to update classes."
             />
           ) : (
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-              {activeClasses.map((data) => (
-                <ClassCard key={data.id} {...data} />
-              ))}
-            </div>
-          )}
-        </TabsContent>
-        <TabsContent value="past" className="mt-2">
-          {pastClasses.length === 0 ? (
-            <ClassPlaceholder
-              title="Past Classes"
-              description="Your past classes will appear here. Click Sync Data to update classes."
-            />
-          ) : (
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-              {pastClasses.map((data) => (
+              {userClasses.map((data) => (
                 <ClassCard key={data.id} {...data} />
               ))}
             </div>

@@ -182,40 +182,15 @@ export async function getClassRankings(code: string) {
   return rankedCourses;
 }
 
-export async function getActiveClasses() {
-  const session = await auth.api.getSession({ headers: await headers() });
+export async function getUserClasses() {
+  const session = await auth.api.getSession({headers: await headers()});
   if (!session)
     throw new Error("You must be logged in to perform this action.");
 
-  const currentDate = new Date().toISOString();
-
   const courses = await db.query.course.findMany({
-    where: (model, { eq, and, sql }) =>
+    where: (model, { eq, and }) =>
       and(
-        eq(model.userId, session.user.id),
-        sql`(${model.times}->>'startTime')::timestamptz <= ${currentDate}::timestamptz`,
-        sql`(${model.times}->>'endTime')::timestamptz >= ${currentDate}::timestamptz`,
-      ),
-    with: {
-      assignments: true,
-    },
-  });
-
-  return courses;
-}
-
-export async function getPastClasses() {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session)
-    throw new Error("You must be logged in to perform this action.");
-
-  const currentDate = new Date().toISOString(); // Ensure correct format
-
-  const courses = await db.query.course.findMany({
-    where: (model, { eq, and, sql }) =>
-      and(
-        eq(model.userId, session.user.id),
-        sql`(${model.times}->>'endTime')::timestamptz < ${currentDate}::timestamptz`,
+        eq(model.userId, session.user.id)
       ),
     with: {
       assignments: true,

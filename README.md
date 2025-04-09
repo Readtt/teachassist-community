@@ -6,7 +6,8 @@
 - [x] Refactor reports as server action
 - [x] Refactor sync as server action
 - [x] Refactor toggle anonymous in queries.ts
-- [ ] Remove past classes- may cause issues (remove when syncing)
+- [x] Remove past classes from leaderboard route
+- [x] Resetup sync without active and past classes
 - [ ] Sort classes by period
 - [ ] Make revalidate faster? TRPC
 - [ ] Create school identifier  

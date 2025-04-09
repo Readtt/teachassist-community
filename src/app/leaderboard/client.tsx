@@ -32,16 +32,16 @@ import {
 } from "~/components/ui/table";
 import type { Session } from "~/lib/auth-client";
 import {
-  type getActiveClasses,
+  type getUserClasses,
   type getClassAverage,
   type getClassRankings,
   type getStudentClassAnonymity,
-  type getStudentClassRanking
+  type getStudentClassRanking,
 } from "~/server/queries";
 import { toggleAnonymousFromClient } from "./actions";
 
 export default function Leaderboard({
-  activeClasses,
+  userClasses,
   classCode,
   classRankings,
   studentClassRanking,
@@ -49,7 +49,7 @@ export default function Leaderboard({
   isAnonymous,
 }: {
   session: Session;
-  activeClasses: Awaited<ReturnType<typeof getActiveClasses>>;
+  userClasses: Awaited<ReturnType<typeof getUserClasses>>;
   classCode: string | null;
   classRankings: Awaited<ReturnType<typeof getClassRankings>>;
   studentClassRanking: Awaited<ReturnType<typeof getStudentClassRanking>>;
@@ -68,7 +68,7 @@ export default function Leaderboard({
     }
 
     setIsSettingAnonymous(true);
-    const {error, data} = await toggleAnonymousFromClient(classCode);
+    const { error, data } = await toggleAnonymousFromClient(classCode);
     if (error) {
       toast.error(error);
     } else {
@@ -99,7 +99,7 @@ export default function Leaderboard({
             See how you compare to other students
           </p>
         </div>
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex flex-wrap items-center gap-2">
           <Button
             onClick={handleToggleAnonymity}
             isLoading={isSettingAnonymous}
@@ -126,7 +126,7 @@ export default function Leaderboard({
         <CommandList>
           <CommandEmpty>No results found.</CommandEmpty>
           <CommandGroup heading="Active Classes">
-            {activeClasses.map(({ id, name, code }) => (
+            {userClasses.map(({ id, name, code }) => (
               <CommandItem
                 onSelect={() => {
                   setSearchOpen(false);
@@ -146,7 +146,7 @@ export default function Leaderboard({
         </CommandList>
       </CommandDialog>
 
-      {activeClasses.length === 0 ? (
+      {userClasses.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center gap-2">
             <h1 className="text-lg font-semibold">
