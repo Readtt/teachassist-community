@@ -197,5 +197,18 @@ export async function getUserClasses() {
     },
   });
 
+  courses.sort((a, b) => {
+    const aIsNum = /^\d+$/.test(a.block);
+    const bIsNum = /^\d+$/.test(b.block);
+
+    if (aIsNum && bIsNum) {
+      return parseInt(a.block) - parseInt(b.block);
+    }
+    if (aIsNum) return -1;
+    if (bIsNum) return 1;
+
+    return a.block.localeCompare(b.block);
+  });
+
   return courses;
 }

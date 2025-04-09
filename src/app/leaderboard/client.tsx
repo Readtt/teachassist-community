@@ -7,7 +7,8 @@ import {
   SearchIcon,
   UsersIcon,
 } from "lucide-react";
-import { redirect } from "next/navigation";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Fragment, useState } from "react";
 import { toast } from "sonner";
 import StatCard from "~/components/stat-card";
@@ -32,11 +33,11 @@ import {
 } from "~/components/ui/table";
 import type { Session } from "~/lib/auth-client";
 import {
-  type getUserClasses,
   type getClassAverage,
   type getClassRankings,
   type getStudentClassAnonymity,
   type getStudentClassRanking,
+  type getUserClasses,
 } from "~/server/queries";
 import { toggleAnonymousFromClient } from "./actions";
 
@@ -56,6 +57,7 @@ export default function Leaderboard({
   classAverage: Awaited<ReturnType<typeof getClassAverage>> | null;
   isAnonymous: Awaited<ReturnType<typeof getStudentClassAnonymity>>;
 }) {
+  const router = useRouter();
   const [isSettingAnonymous, setIsSettingAnonymous] = useState<boolean>(false);
   const [searchOpen, setSearchOpen] = useState<boolean>(false);
 
@@ -84,12 +86,12 @@ export default function Leaderboard({
 
   return (
     <main className="container py-12">
-      <p
-        onClick={() => redirect("/")}
+      <Link
+        href={"/"}
         className="text-muted-foreground hover:text-primary mb-6 flex w-fit cursor-pointer items-center gap-1.5 transition-all"
       >
         <ChevronLeftIcon className="h-4 w-4" /> Back
-      </p>
+      </Link>
       <div className="mb-8 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex flex-col gap-2">
           <h1 className="text-4xl font-semibold tracking-tight">
@@ -130,7 +132,7 @@ export default function Leaderboard({
               <CommandItem
                 onSelect={() => {
                   setSearchOpen(false);
-                  redirect("?code=" + code);
+                  router.push("?code=" + code);
                 }}
                 key={id}
               >

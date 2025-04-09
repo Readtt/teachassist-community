@@ -2,10 +2,10 @@
 
 import { MenuIcon, XIcon } from "lucide-react";
 import Link from "next/link";
-import { redirect, usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Button } from "~/components/ui/button";
+import { Button, buttonVariants } from "~/components/ui/button";
 import { ThemeToggle } from "~/components/ui/theme-toggle";
 import { authClient, type Session } from "~/lib/auth-client";
 import { cn } from "~/lib/utils";
@@ -36,10 +36,11 @@ export default function Navbar({ session }: { session: Session }) {
           router.push("/login");
         },
         onError: (e) => {
-          toast.error(e.error.message);
+          toast.error(e.error.message ?? "An error occured while logging out");
         },
       },
     });
+    setIsLoggingOut(false);
   };
 
   return (
@@ -58,7 +59,12 @@ export default function Navbar({ session }: { session: Session }) {
       >
         <div className="container">
           <div className="flex items-center justify-between">
-            <div className="mr-6 flex items-center gap-2">
+            <div
+              onClick={() => {
+                router.push("/");
+              }}
+              className="mr-6 flex cursor-pointer items-center gap-2"
+            >
               <Logo className="h-6 w-6" />
               <h1 className="text-md font-semibold tracking-tight md:text-lg">
                 Teachassist Community
@@ -66,13 +72,15 @@ export default function Navbar({ session }: { session: Session }) {
             </div>
             <div className="hidden flex-1 gap-2 lg:flex">
               {navigationLinks.map((link) => (
-                <Button
+                <Link
+                  className={buttonVariants({
+                    variant: pathname === link.href ? "secondary" : "ghost",
+                  })}
                   key={link.href}
-                  variant={pathname === link.href ? "secondary" : "ghost"}
-                  onClick={() => redirect(link.href)}
+                  href={link.href}
                 >
                   {link.name}
-                </Button>
+                </Link>
               ))}
             </div>
             <div className="hidden items-center gap-4 lg:flex">
@@ -88,20 +96,21 @@ export default function Navbar({ session }: { session: Session }) {
                 Logout
               </Button>
             </div>
-            <div className="flex gap-1 items-center">
-            <ThemeToggle className="lg:hidden"/>
-            <Button
-              size={"icon"}
-              variant={"ghost"}
-              className="lg:hidden"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            >
-              {isMobileMenuOpen ? (
-                <XIcon className="scale-125" />
-              ) : (
-                <MenuIcon className="scale-125" />
-              )}
-            </Button>
+            <div className="flex items-center gap-1">
+              <ThemeToggle className="lg:hidden" />
+              <Button
+                size={"icon"}
+                variant={"ghost"}
+                className="lg:hidden"
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
+              >
+                {isMobileMenuOpen ? (
+                  <XIcon className="scale-125" />
+                ) : (
+                  <MenuIcon className="scale-125" />
+                )}
+              </Button>
             </div>
           </div>
         </div>
@@ -111,14 +120,16 @@ export default function Navbar({ session }: { session: Session }) {
           <div className="container flex flex-col gap-4">
             <div className="flex flex-col gap-2">
               {navigationLinks.map((link) => (
-                <Button
+                <Link
+                  className={buttonVariants({
+                    variant: pathname === link.href ? "secondary" : "ghost",
+                    className: "justify-start",
+                  })}
                   key={link.href}
-                  variant={pathname === link.href ? "secondary" : "ghost"}
-                  className="justify-start"
-                  asChild
+                  href={link.href}
                 >
-                  <Link href={link.href}>{link.name}</Link>
-                </Button>
+                  {link.name}
+                </Link>
               ))}
             </div>
             <div className="flex flex-col items-center border-t pt-4">

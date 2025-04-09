@@ -8,12 +8,12 @@
 - [x] Refactor toggle anonymous in queries.ts
 - [x] Remove past classes from leaderboard route
 - [x] Resetup sync without active and past classes
-- [ ] Sort classes by period
-- [ ] Make revalidate faster? TRPC
+- [x] Sort classes by period
+- [x] Buy bright data credits
 - [ ] Create school identifier  
 - [ ] Search all classes  
+- [ ] Add CRON job for auto sync
 - [ ] Create a global classes switch  
-- [ ] Use react router or tRPC  
+- [ ] Use react router or tRPC 
 - [ ] Use toolip proxy
-- [ ] Buy bright data credits
 - [ ] Add landing page

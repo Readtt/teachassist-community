@@ -1,5 +1,3 @@
-export const dynamic = "force-dynamic";
-
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { Fragment } from "react";
@@ -13,6 +11,8 @@ import {
 } from "~/server/queries";
 import Navbar from "../_components/navbar";
 import Leaderboard from "./client";
+
+export const dynamic = "force-dynamic";
 
 export default async function Page({
   searchParams,
@@ -29,16 +29,15 @@ export default async function Page({
   const classCode =
     params?.code ?? userClasses[userClasses.length - 1]?.code ?? null;
 
-  const classRankings = classCode ? await getClassRankings(classCode) : [];
-  const studentClassRanking = classCode
-    ? await getStudentClassRanking(classCode)
-    : undefined;
-  const classAverage = classCode ? await getClassAverage(classCode) : null;
-  const isAnonymous = classCode
-    ? await getStudentClassAnonymity(classCode)
-    : true;
+  if (!classCode) redirect("/leaderboard?code=" + classCode);
 
-  if (!params?.code) redirect("/leaderboard?code=" + classCode);
+  const [classRankings, studentClassRanking, classAverage, isAnonymous] =
+    await Promise.all([
+      getClassRankings(classCode),
+      getStudentClassRanking(classCode),
+      getClassAverage(classCode),
+      getStudentClassAnonymity(classCode),
+    ]);
 
   return (
     <Fragment>

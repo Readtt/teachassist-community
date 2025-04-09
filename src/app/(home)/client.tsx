@@ -1,11 +1,12 @@
 "use client";
 
 import { ChartLineIcon, RefreshCcw, UserIcon } from "lucide-react";
-import { redirect, useSearchParams } from "next/navigation";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import StatCard from "~/components/stat-card";
-import { Button } from "~/components/ui/button";
+import { Button, buttonVariants } from "~/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -15,9 +16,7 @@ import {
 } from "~/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import type { Session } from "~/lib/auth-client";
-import type {
-  getUserClasses
-} from "~/server/queries";
+import type { getUserClasses } from "~/server/queries";
 import ClassCard from "./_components/class-card";
 import ClassPlaceholder from "./_components/class-placeholder";
 import { syncTAFromClient } from "./actions";
@@ -74,9 +73,12 @@ export default function Home({
             {!isSyncing && <RefreshCcw />}
             Sync Data
           </Button>
-          <Button onClick={() => redirect("/leaderboard")} variant="highlight">
+          <Link
+            href={"/leaderboard"}
+            className={buttonVariants({ variant: "highlight" })}
+          >
             <ChartLineIcon /> Leaderboard
-          </Button>
+          </Link>
         </div>
       </div>
 
