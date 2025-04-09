@@ -14,7 +14,7 @@ const Banner = () => {
   if (!isVisible) return null;
 
   return (
-    <section className="bg-card w-full border-b py-1 shadow-sm">
+    <section className="bg-background w-full border-b py-1 shadow-sm">
       <div className="container mx-auto flex items-center justify-between gap-2">
         <div className="flex-1 text-center">
           <span className="text-sm">

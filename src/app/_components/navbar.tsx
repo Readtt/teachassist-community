@@ -60,7 +60,7 @@ export default function Navbar({ session }: { session: Session }) {
         </div>
         <div
           className={cn(
-            "flex h-16 items-center border-b py-3",
+            "flex h-16 items-center border-y py-3",
             isMobileMenuOpen && "border-0",
           )}
         >

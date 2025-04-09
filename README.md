@@ -10,10 +10,11 @@
 - [x] Resetup sync without active and past classes
 - [x] Sort classes by period
 - [x] Buy bright data credits
-- [ ] Create school identifier  
+- [ ] Create school identifier
+- [ ] Report issue
+- [ ] Error management ***
 - [ ] Search all classes  
 - [ ] Add CRON job for auto sync per week
-- [ ] Create a global classes switch  
-- [ ] Use react router or tRPC 
+- [ ] Create a global classes switch
 - [ ] Use toolip proxy
 - [ ] Add landing page
