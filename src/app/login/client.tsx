@@ -128,9 +128,6 @@ export default function Login() {
                         <FormControl>
                           <Input type="password" {...field} />
                         </FormControl>
-                        <FormDescription>
-                          This is encrypted and cannot be seen by anyone.
-                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}

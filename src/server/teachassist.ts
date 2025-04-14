@@ -1,13 +1,14 @@
 import "server-only";
 
 import { load } from "cheerio";
-import { and, eq, or, sql } from "drizzle-orm";
+import { and, eq, notInArray, or, sql } from "drizzle-orm";
 import makeFetchCookie from "fetch-cookie";
 import { headers } from "next/headers";
 import fetch from "node-fetch";
 import { v4 as uuidv4 } from "uuid";
 import type { Course, LoginTA } from "~/common/types/teachassist";
 import { env } from "~/env";
+import type { Session } from "~/lib/auth-client";
 import { decryptPassword } from "~/lib/crypto";
 import { auth } from "./auth";
 import { db } from "./db";
@@ -60,13 +61,38 @@ export async function loginTA(
   };
 }
 
-export default async function syncTA() {
+export default async function syncTA({
+  bypassLimit,
+  html,
+  manualSession,
+  manualDecryptedCredentials,
+}: {
+  bypassLimit?: boolean;
+  html?: string;
+  manualSession?: Session | null;
+  manualDecryptedCredentials?: {
+    studentId: string;
+    password: string;
+  };
+}) {
   try {
-    const session = await auth.api.getSession({ headers: await headers() });
-    if (!session) throw new Error("You must be logged in to perform this action.");
+    let session: Session | null;
+    let studentId: string | null;
+    let password: string | null;
 
-    const studentId = session.user.studentId;
-    const password = decryptPassword(session.user.taPassword);
+    if (manualDecryptedCredentials) {
+      studentId = manualDecryptedCredentials.studentId;
+      password = manualDecryptedCredentials.password;
+    } else {
+      session =
+        manualSession ??
+        (await auth.api.getSession({ headers: await headers() }));
+      if (!session)
+        throw new Error("You must be logged in to perform this action.");
+
+      studentId = session.user.studentId;
+      password = decryptPassword(session.user.taPassword);
+    }
 
     const [existingUser] = await db
       .select()
@@ -78,26 +104,28 @@ export default async function syncTA() {
     const lastSynced = existingUser.lastSyncedAt;
     const now = new Date();
 
-    if (lastSynced) {
+    if (lastSynced && !bypassLimit) {
       const twelveHoursAgo = new Date();
       twelveHoursAgo.setHours(now.getHours() - 12);
-    
+
       if (lastSynced > twelveHoursAgo) {
-        const nextAllowedSync = new Date(lastSynced.getTime() + 12 * 60 * 60 * 1000);
+        const nextAllowedSync = new Date(
+          lastSynced.getTime() + 12 * 60 * 60 * 1000,
+        );
         const diffMs = nextAllowedSync.getTime() - now.getTime();
-    
+
         const hours = Math.floor(diffMs / (1000 * 60 * 60));
         const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-    
+
         throw new Error(
-          `You can only sync once every 12 hours. Try again in ${hours}h ${minutes}m.`
+          `You can only sync once every 12 hours. Try again in ${hours}h ${minutes}m.`,
         );
       }
     }
 
-    const { data: courses, error } = await tryCatch(
-      getTAReports({ studentId, password }),
-    );
+    const payload = html ? { html } : { studentId, password };
+
+    const { data: courses, error } = await tryCatch(getTAReports(payload));
     if (error) throw error;
 
     const userId = existingUser.id;
@@ -106,25 +134,39 @@ export default async function syncTA() {
     await db.transaction(async (trx) => {
       // Delete outdated courses
       await trx
-      .delete(course)
-      .where(and(
-        eq(course.userId, userId),
-        or(
-          sql`(${course.times}->>'endTime')::timestamptz < ${nowISO}::timestamptz`,
-          sql`(${course.times}->>'startTime')::timestamptz > ${nowISO}::timestamptz`
-        )
-      ));
+        .delete(course)
+        .where(
+          and(
+            eq(course.userId, userId),
+            or(
+              sql`(${course.times}->>'endTime')::timestamptz < ${nowISO}::timestamptz`,
+              sql`(${course.times}->>'startTime')::timestamptz > ${nowISO}::timestamptz`,
+            ),
+          ),
+        );
+
+      const newCourseCodes = courses.map((c) => c.code);
+        
+      // Delete courses for the user that are NOT in the new course code list
+      if (newCourseCodes.length > 0) {
+        await trx
+          .delete(course)
+          .where(
+            and(
+              eq(course.userId, userId),
+              notInArray(course.code, newCourseCodes),
+            ),
+          );
+      } else {
+        // If no courses found in the new scrape, remove all for user
+        await trx.delete(course).where(eq(course.userId, userId));
+      }
 
       for (const c of courses) {
         const [existingCourse] = await trx
           .select()
           .from(course)
-          .where(
-            and(
-              eq(course.code, c.code),
-              eq(course.userId, userId),
-            ),
-          );
+          .where(and(eq(course.code, c.code), eq(course.userId, userId)));
 
         const courseId = existingCourse?.id ?? uuidv4();
 
@@ -143,6 +185,7 @@ export default async function syncTA() {
               isFinal: c.isFinal,
               isMidterm: c.isMidterm,
               link: c.link ?? existingCourse.link,
+              schoolIdentifier: c.schoolIdentifier,
             })
             .where(eq(course.id, courseId));
         } else {
@@ -157,6 +200,7 @@ export default async function syncTA() {
             isFinal: c.isFinal,
             isMidterm: c.isMidterm,
             link: c.link,
+            schoolIdentifier: c.schoolIdentifier,
             userId,
           });
         }
@@ -230,10 +274,12 @@ async function getTAReports({
       const [courseInfo, blockInfo, rawStartTime, timeInfo, mark] = courseData;
 
       const [rawCode, rawName] = courseInfo?.split(" : ") ?? [];
-      const code = rawCode
-        ?.replace(":", "")
-        .trim()
-        .replace("Hodan Nalayeh Secondary School - ", "");
+      const { code, schoolIdentifier: possibleSchoolIdentifier } = parseCode(
+        rawCode?.replace(":", "").trim() ?? "",
+      );
+      const schoolIdentifier =
+        possibleSchoolIdentifier ??
+        $(".red_border_message h2").first().text().trim();
       const name = rawName ?? null;
       const startTime = new Date(rawStartTime?.split("~")[0]?.trim() ?? "");
       const hasDropped = timeInfo?.includes("Dropped on");
@@ -272,10 +318,27 @@ async function getTAReports({
         ...markInfo,
         link,
         assignments: [],
+        schoolIdentifier,
       };
 
       courses.push(course);
     } catch {}
+  }
+
+  function parseCode(input: string) {
+    const trimmed = input.trim();
+
+    // Split on " - " but allow multiple parts
+    const parts = trimmed.split(" - ").map((s) => s.trim());
+
+    if (parts.length > 1) {
+      const code = parts.pop(); // last part is always the course code
+      const schoolIdentifier = parts.join(" - "); // re-join the rest
+      return { schoolIdentifier, code };
+    }
+
+    // Just a standalone course code
+    return { schoolIdentifier: null, code: trimmed };
   }
 
   function getMark(rawMark?: string) {

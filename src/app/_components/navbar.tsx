@@ -23,8 +23,8 @@ const navigationLinks = [
   },
   {
     name: "Updates",
-    href:"/updates"
-  }
+    href: "/updates",
+  },
 ] as const;
 
 export default function Navbar({ session }: { session: Session }) {
@@ -70,7 +70,7 @@ export default function Navbar({ session }: { session: Session }) {
                 onClick={() => {
                   router.push("/");
                 }}
-                className="flex cursor-pointer items-center gap-2 w-min md:whitespace-nowrap mr-4"
+                className="mr-4 flex w-min cursor-pointer items-center gap-2 md:whitespace-nowrap"
               >
                 <Logo className="h-6 w-6" />
                 <h1 className="text-md font-semibold tracking-tight md:text-lg">
@@ -81,7 +81,14 @@ export default function Navbar({ session }: { session: Session }) {
                 {navigationLinks.map((link) => (
                   <Link
                     className={buttonVariants({
-                      variant: pathname === link.href ? "secondary" : "ghost",
+                      variant:
+                        link.href === "/"
+                          ? pathname === link.href
+                            ? "secondary"
+                            : "ghost"
+                          : pathname.startsWith(link.href)
+                            ? "secondary"
+                            : "ghost",
                     })}
                     key={link.href}
                     href={link.href}
@@ -91,7 +98,7 @@ export default function Navbar({ session }: { session: Session }) {
                 ))}
               </div>
               <div className="hidden items-center gap-4 lg:flex">
-                <p className="text-muted-foreground text-sm tracking-tighter text-right">
+                <p className="text-muted-foreground text-right text-sm tracking-tighter">
                   Signed in as {session.user.name}
                 </p>
                 <ThemeToggle />
@@ -129,7 +136,14 @@ export default function Navbar({ session }: { session: Session }) {
                 {navigationLinks.map((link) => (
                   <Link
                     className={buttonVariants({
-                      variant: pathname === link.href ? "secondary" : "ghost",
+                      variant:
+                        link.href === "/"
+                          ? pathname === link.href
+                            ? "secondary"
+                            : "ghost"
+                          : pathname.startsWith(link.href)
+                            ? "secondary"
+                            : "ghost",
                       className: "justify-start",
                     })}
                     key={link.href}

@@ -87,8 +87,9 @@ export default function Home({
           <DialogHeader>
             <DialogTitle>Sync Your Data</DialogTitle>
             <DialogDescription>
-              You just logged in. Click the <strong>Sync Data</strong> button to
-              update your information and ensure everything is up to date.
+              Your data has been synced. Next time you get an assignment or test
+              back with a mark, click <strong>Sync Data</strong> to update the
+              leaderboard.
             </DialogDescription>
           </DialogHeader>
         </DialogContent>

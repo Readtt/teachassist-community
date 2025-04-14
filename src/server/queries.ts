@@ -1,12 +1,15 @@
 import "server-only";
 
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, like, sql } from "drizzle-orm";
 import { headers } from "next/headers";
+import type { z } from "zod";
+import type { leaderboardModes } from "~/common/types/leaderboard-modes";
+import { classCodeToGlobalCode } from "~/lib/utils";
 import { auth } from "./auth";
 import { db } from "./db";
 import { course, user } from "./db/schema";
 
-export async function toggleAnonymous(code: string) {
+export async function toggleAnonymous(code: string, school: string) {
   try {
     const session = await auth.api.getSession({ headers: await headers() });
     if (!session)
@@ -14,7 +17,6 @@ export async function toggleAnonymous(code: string) {
 
     const userId = session.user.id;
 
-    const currentDate = new Date().toISOString();
     const [existingCourse] = await db
       .select()
       .from(course)
@@ -22,8 +24,7 @@ export async function toggleAnonymous(code: string) {
         and(
           eq(course.code, code),
           eq(course.userId, userId),
-          sql`(${course.times}->>'startTime')::timestamptz <= ${currentDate}::timestamptz`,
-          sql`(${course.times}->>'endTime')::timestamptz >= ${currentDate}::timestamptz`,
+          eq(course.schoolIdentifier, school),
         ),
       )
       .limit(1);
@@ -37,14 +38,7 @@ export async function toggleAnonymous(code: string) {
     await db
       .update(course)
       .set({ isAnonymous: !newAnonymousState })
-      .where(
-        and(
-          eq(course.code, code),
-          eq(course.userId, userId),
-          sql`(${course.times}->>'startTime')::timestamptz <= ${currentDate}::timestamptz`,
-          sql`(${course.times}->>'endTime')::timestamptz >= ${currentDate}::timestamptz`,
-        ),
-      );
+      .where(and(eq(course.code, code), eq(course.userId, userId)));
 
     return {
       data: {
@@ -63,12 +57,11 @@ export async function toggleAnonymous(code: string) {
   }
 }
 
-export async function getStudentClassAnonymity(code: string) {
+export async function getStudentClassAnonymity(code: string, school: string) {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session)
     throw new Error("You must be logged in to perform this action.");
 
-  const currentDate = new Date().toISOString();
   const [studentClassAnonymity] = await db
     .select({
       isAnonymous: course.isAnonymous,
@@ -76,122 +69,160 @@ export async function getStudentClassAnonymity(code: string) {
     .from(course)
     .where(
       and(
-        eq(course.code, code),
         eq(course.userId, session.user.id),
-        sql`(${course.times}->>'startTime')::timestamptz <= ${currentDate}::timestamptz`,
-        sql`(${course.times}->>'endTime')::timestamptz >= ${currentDate}::timestamptz`,
+        eq(course.code, code),
+        eq(course.schoolIdentifier, school),
       ),
     );
 
   return studentClassAnonymity?.isAnonymous;
 }
 
-export async function getClassAverage(code: string) {
+export async function getRankingsData({
+  mode,
+  code,
+  school,
+  page = 1,
+  pageSize = 25,
+}: {
+  mode: z.infer<typeof leaderboardModes>;
+  code: string;
+  school: string;
+  page?: number;
+  pageSize?: number;
+}) {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session)
     throw new Error("You must be logged in to perform this action.");
 
-  const currentDate = new Date().toISOString();
+  const offset = (page - 1) * pageSize;
+  const globalCode = classCodeToGlobalCode(code);
 
-  // Fetch courses that are currently active and match the given code
-  const courses = await db
-    .select({ overallMark: course.overallMark })
-    .from(course)
-    .where(
-      and(
+  // --- Determine filter criteria based on selected leaderboard mode ---
+  let whereClause;
+  switch (mode) {
+    case "class":
+      whereClause = and(
         eq(course.code, code),
-        sql`(${course.times}->>'startTime')::timestamptz <= ${currentDate}::timestamptz`,
-        sql`(${course.times}->>'endTime')::timestamptz >= ${currentDate}::timestamptz`,
-      ),
-    );
-
-  let totalMarks = 0;
-  let totalMarksCount = 0;
-
-  for (const course of courses) {
-    if (course.overallMark !== null) {
-      totalMarks += Number(course.overallMark);
-      totalMarksCount++;
-    }
+        eq(course.schoolIdentifier, school),
+      );
+      break;
+    case "school":
+      whereClause = and(
+        like(course.code, `%${globalCode}%`),
+        eq(course.schoolIdentifier, school),
+      );
+      break;
+    case "global":
+      whereClause = like(course.code, `${globalCode}%`);
+      break;
   }
 
-  return totalMarksCount > 0 ? totalMarks / totalMarksCount : null;
-}
-
-export async function getStudentClassRanking(code: string) {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session)
-    throw new Error("You must be logged in to perform this action.");
-
-  const currentDate = new Date().toISOString();
-  const studentRankings = await db
-    .select({
-      userId: course.userId,
-      rank: sql<string>`RANK() OVER (ORDER BY ${course.overallMark} DESC NULLS LAST)`.as(
-        "rank",
-      ),
-    })
-    .from(course)
-    .where(
-      and(
-        eq(course.code, code),
-        sql`(${course.times}->>'startTime')::timestamptz <= ${currentDate}::timestamptz`,
-        sql`(${course.times}->>'endTime')::timestamptz >= ${currentDate}::timestamptz`,
-      ),
-    );
-
-  const studentClassRanking = studentRankings.find(
-    (student) => student.userId === session.user.id,
-  );
-
-  return studentClassRanking;
-}
-
-export async function getClassRankings(code: string) {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session)
-    throw new Error("You must be logged in to perform this action.");
-
-  const currentDate = new Date().toISOString();
-  const rankedCourses = await db
-    .select({
-      id: course.id,
-      code: course.code,
-      name: course.name,
-      overallMark: course.overallMark,
-      rank: sql<string>`RANK() OVER (ORDER BY ${course.overallMark} DESC NULLS LAST)`.as(
-        "rank",
-      ),
-      studentId: sql<string>`
-        CASE 
-          WHEN ${course.isAnonymous} = FALSE AND ${user.id} = ${session.user.id} 
-          THEN ${user.studentId} 
+  // --- Fetch relevant data concurrently ---
+  const [studentCourse, allMarks, totalCountResult, rankedCourses, anonymity] =
+    await Promise.all([
+      // Student's course record
+      db.query.course.findFirst({
+        where: (model, { eq, and }) =>
+          and(
+            eq(model.userId, session.user.id),
+            eq(model.code, code),
+            eq(model.schoolIdentifier, school),
+          ),
+      }),
+      // All student marks for ranking calculations
+      db
+        .select({ userId: course.userId, overallMark: course.overallMark })
+        .from(course)
+        .where(whereClause),
+      // Total number of students for pagination
+      db
+        .select({ count: sql<number>`COUNT(*)` })
+        .from(course)
+        .where(whereClause),
+      // Paginated leaderboard with calculated rank and conditional anonymity
+      db
+        .select({
+          id: course.id,
+          code: course.code,
+          name: course.name,
+          overallMark: course.overallMark,
+          rank: sql<string>`RANK() OVER (ORDER BY ${course.overallMark} DESC NULLS LAST)`.as(
+            "rank",
+          ),
+          studentId: sql<string>`CASE 
+          WHEN ${course.isAnonymous} = FALSE AND ${user.id} = ${session.user.id}
+          THEN ${user.studentId}
           ELSE NULL 
         END`.as("studentId"),
-    })
-    .from(course)
-    .leftJoin(user, eq(course.userId, user.id))
-    .where(
-      and(
-        eq(course.code, code),
-        sql`(${course.times}->>'startTime')::timestamptz <= ${currentDate}::timestamptz`,
-        sql`(${course.times}->>'endTime')::timestamptz >= ${currentDate}::timestamptz`,
-      ),
-    );
+        })
+        .from(course)
+        .leftJoin(user, eq(course.userId, user.id))
+        .where(whereClause)
+        .orderBy(sql`${course.overallMark} DESC NULLS LAST`)
+        .limit(pageSize)
+        .offset(offset),
+      // Check if the current student is anonymous
+      db
+        .select({ isAnonymous: course.isAnonymous })
+        .from(course)
+        .where(
+          and(
+            eq(course.userId, session.user.id),
+            eq(course.code, code),
+            eq(course.schoolIdentifier, school),
+          ),
+        ),
+    ]);
 
-  return rankedCourses;
+  // --- Calculate rank and average for the current student ---
+  const sortedMarks = allMarks
+    .filter((m) => m.overallMark !== null)
+    .sort((a, b) => Number(b.overallMark) - Number(a.overallMark));
+
+  const studentIndex = sortedMarks.findIndex(
+    (m) => m.userId === session.user.id,
+  );
+  const studentRank = studentIndex !== -1 ? studentIndex + 1 : null;
+  const studentAverage = studentCourse?.overallMark ?? null;
+
+  // --- Compute overall class/school/global average ---
+  const { sum, count } = sortedMarks.reduce(
+    (acc, c) => {
+      acc.sum += Number(c.overallMark);
+      acc.count += 1;
+      return acc;
+    },
+    { sum: 0, count: 0 },
+  );
+
+  const average = count > 0 ? sum / count : null;
+  const totalCount = totalCountResult[0]?.count ?? 0;
+  const maxPages = Math.ceil(totalCount / pageSize);
+
+  // --- Return formatted ranking data and student info ---
+  return {
+    data: {
+      student: {
+        average: studentAverage,
+        rank: studentRank,
+        isAnonymous: anonymity[0]?.isAnonymous,
+      },
+      average,
+      rankings: rankedCourses,
+      totalStudents: totalCount,
+      maxPages,
+    },
+  };
 }
 
 export async function getUserClasses() {
-  const session = await auth.api.getSession({headers: await headers()});
+  const session = await auth.api.getSession({ headers: await headers() });
   if (!session)
     throw new Error("You must be logged in to perform this action.");
 
   const courses = await db.query.course.findMany({
-    where: (model, { eq, and }) =>
-      and(
-        eq(model.userId, session.user.id)
-      ),
+    where: (model, { eq, and }) => and(eq(model.userId, session.user.id)),
     with: {
       assignments: true,
     },

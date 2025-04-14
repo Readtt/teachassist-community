@@ -43,6 +43,7 @@ export const course = createTable("course", {
   isFinal: boolean("is_final").notNull().default(false),
   isMidterm: boolean("is_midterm").notNull().default(false),
   link: text("link"),
+  schoolIdentifier: text("school_identifier"),
   isAnonymous: boolean("is_anonymous").notNull().default(true),
   userId: text("user_id").notNull().references(() => user.id, {
     onDelete: "cascade",

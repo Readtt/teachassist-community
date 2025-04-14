@@ -10,11 +10,14 @@
 - [x] Resetup sync without active and past classes
 - [x] Sort classes by period
 - [x] Buy bright data credits
-- [ ] Create school identifier
+- [x] Create school identifier
+- [x] Refactor Leaderboard for Global/Class/School
+- [x] Resync all users before deploying to prod
+- [x] Auto Sync on successful LOGIN/SIGNUP
+- [x] Fix up all queries for global/class/school modes
 - [ ] Report issue
 - [ ] Error management ***
 - [ ] Search all classes  
 - [ ] Add CRON job for auto sync per week
-- [ ] Create a global classes switch
 - [ ] Use toolip proxy
 - [ ] Add landing page

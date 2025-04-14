@@ -6,6 +6,7 @@ import { Fragment } from "react";
 import { ThemeProvider } from "~/components/theme-provider";
 import { Toaster } from "~/components/ui/sonner";
 import { env } from "~/env";
+import { TooltipProvider } from "~/components/ui/tooltip";
 
 export const metadata: Metadata = {
   metadataBase: new URL(env.BETTER_AUTH_URL),
@@ -69,16 +70,18 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${poppins.className}`}>
       <body>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="dark"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <Fragment>
-            {children} <Toaster />
-          </Fragment>
-        </ThemeProvider>
+        <TooltipProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="dark"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <Fragment>
+              {children} <Toaster />
+            </Fragment>
+          </ThemeProvider>
+        </TooltipProvider>
       </body>
     </html>
   );

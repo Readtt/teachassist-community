@@ -17,3 +17,7 @@ export function emailToStudentId(email: string) {
 export function studentIdToEmail(studentId: string) {
   return studentId + "@gapps.yrdsb.ca";
 }
+
+export function classCodeToGlobalCode(classCode: string) {
+  return classCode.split("-")[0]!;
+}

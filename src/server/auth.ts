@@ -1,11 +1,14 @@
-import { betterAuth } from "better-auth";
+import {
+  betterAuth
+} from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { APIError, createAuthMiddleware } from "better-auth/api";
+import type { Session } from "~/lib/auth-client";
 import { encryptPassword } from "~/lib/crypto";
 import { emailToStudentId } from "~/lib/utils";
 import { db } from "./db";
 import { tryCatch } from "./helpers";
-import { loginTA } from "./teachassist";
+import syncTA, { loginTA } from "./teachassist";
 
 type AuthContext<T> = {
   path: string;
@@ -45,7 +48,7 @@ export const auth = betterAuth({
     },
   },
   hooks: {
-    before: createAuthMiddleware(async (authCtx: AuthContext<unknown>) => {
+    before: createAuthMiddleware(async (authCtx) => {
       if (authCtx.path === "/sign-up/email") {
         const ctx = authCtx as AuthContext<SignUpBody>;
         const studentIdFromEmail = emailToStudentId(ctx.body?.email ?? "");
@@ -63,7 +66,7 @@ export const auth = betterAuth({
             message: "Password and ta password do not match.",
           });
 
-        const { error } = await tryCatch(loginTA(studentId, password));
+        const { error, data } = await tryCatch(loginTA(studentId, password));
         if (error) throw new APIError(500, { message: error.message });
 
         return {
@@ -73,6 +76,7 @@ export const auth = betterAuth({
               ...ctx.body,
               taPassword: encryptPassword(taPassword ?? ""),
               studentId,
+              loginHtml: data.html,
             },
           },
         };
@@ -83,8 +87,43 @@ export const auth = betterAuth({
         const studentId = emailToStudentId(ctx.body?.email ?? "");
         const password = ctx.body?.password;
 
-        const { error } = await tryCatch(loginTA(studentId, password));
+        const { error, data } = await tryCatch(loginTA(studentId, password));
         if (error) throw new APIError(500, { message: error.message });
+
+        return {
+          context: {
+            ...ctx,
+            body: {
+              ...ctx.body,
+              loginHtml: data.html,
+            },
+          },
+        };
+      }
+    }),
+    after: createAuthMiddleware(async (authCtx) => {
+      if (authCtx.path === "/sign-up/email") {
+        const ctx = authCtx as AuthContext<SignUpBody & { loginHtml: string }>;
+        if (ctx.body?.loginHtml) {
+          const { error } = await syncTA({
+            bypassLimit: true,
+            html: ctx.body.loginHtml,
+            manualSession: authCtx.context.newSession as Session,
+          });
+          console.log(error);
+        }
+      }
+
+      if (authCtx.path === "/sign-in/email") {
+        const ctx = authCtx as AuthContext<SignInBody & { loginHtml: string }>;
+        if (ctx.body?.loginHtml) {
+          const { error } = await syncTA({
+            bypassLimit: true,
+            html: ctx.body.loginHtml,
+            manualSession: authCtx.context.newSession as Session,
+          });
+          console.log(error);
+        }
       }
     }),
   },

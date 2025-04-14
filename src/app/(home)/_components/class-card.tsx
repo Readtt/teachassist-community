@@ -1,31 +1,40 @@
 "use client";
 
+import { ChevronRightIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Badge } from "~/components/ui/badge";
+import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { Progress } from "~/components/ui/progress";
 import { cn } from "~/lib/utils";
 import type { getUserClasses } from "~/server/queries";
 
-type ClassCardProps =
-  | Awaited<ReturnType<typeof getUserClasses>>[number]
+type ClassCardProps = Awaited<ReturnType<typeof getUserClasses>>[number];
+
 export default function ClassCard({
   room,
   name,
   code,
   overallMark,
   block,
-
   isFinal,
   isMidterm,
+  schoolIdentifier,
 }: ClassCardProps) {
   const router = useRouter();
 
   return (
-    <Card onClick={() => {router.push("/leaderboard?code=" + code)}} className="flex h-full flex-col gap-4 py-4 pb-6 cursor-pointer">
+    <Card
+      onClick={() => {
+        router.push("/leaderboard/class/" + code + "/?school=" + schoolIdentifier);
+      }}
+      className="flex h-full cursor-pointer flex-col gap-4 py-4 pb-6"
+    >
       <CardHeader>
         <div className="flex justify-between gap-2">
-          <span className="text-muted-foreground text-xs">Room {room}</span>
+          <span className="text-muted-foreground text-xs">
+            {parseInt(room) ? `Room ${room}` : room}
+          </span>
           <Badge variant={"secondary"}>Period {block}</Badge>
         </div>
         <CardTitle className="tracking-tight">
@@ -40,8 +49,11 @@ export default function ClassCard({
           </span>
         </CardTitle>
       </CardHeader>
-      <CardContent className="flex flex-grow flex-col gap-4">
-        <div className="flex flex-col gap-2">
+
+      <CardContent className="flex flex-grow flex-col justify-between gap-4">
+        {/* Other content can go here if needed */}
+
+        <div className="mt-auto flex flex-col gap-2">
           <div className="flex items-center justify-between">
             <span>Current Grade</span>
             <span
@@ -69,22 +81,14 @@ export default function ClassCard({
             value={Number(overallMark) ?? 0}
           />
         </div>
-        {/* <div className="flex flex-col">
-          <span className="text-muted-foreground text-xs">
-            Latest Graded Item
-          </span>
-          <p className="text-sm font-medium">
-            {assignments[0]?.name ?? "No assignments"}
-          </p>
-        </div> */}
-        {/* <div className="mt-auto flex justify-end">
-          <Button
-            variant="link"
-            className="p-0 text-blue-500 hover:text-blue-500 has-[>svg]:px-0"
-          >
-            View Details <ChevronRightIcon className="h-4 w-4" />
+        <Badge className="text-center whitespace-normal" variant={"secondary"}>
+          {schoolIdentifier}
+        </Badge>
+        <div className="mt-auto flex justify-end">
+          <Button variant="link" className="p-0 has-[>svg]:px-0">
+            View Leaderboard <ChevronRightIcon className="h-4 w-4" />
           </Button>
-        </div> */}
+        </div>
       </CardContent>
     </Card>
   );

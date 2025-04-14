@@ -14,13 +14,13 @@ const Banner = () => {
   if (!isVisible) return null;
 
   return (
-    <section className="bg-background w-full border-b py-1 shadow-sm">
+    <section className="bg-blue-500 text-white w-full border-b py-1 shadow-sm">
       <div className="container mx-auto flex items-center justify-between gap-2">
         <div className="flex-1 text-center">
           <span className="text-sm">
-            <span className="font-medium">Version 1.0 is here!</span>{" "}
-            <span className="text-muted-foreground">
-              Spread the word!
+            <span className="font-medium">🎉 Version 2.0 is here!</span>{" "}
+            <span className="text-blue-100">
+              Spread the word
             </span>
           </span>
         </div>

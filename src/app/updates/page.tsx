@@ -5,12 +5,12 @@ import type React from "react";
 import { Fragment } from "react";
 import { Badge } from "~/components/ui/badge";
 import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardFooter,
-    CardHeader,
-    CardTitle,
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
 } from "~/components/ui/card";
 import { auth } from "~/server/auth";
 import Navbar from "../_components/navbar";
@@ -35,32 +35,32 @@ export default async function Page() {
       title: "Global Class Switch",
       description:
         "Seamlessly switch from viewing just your own class section to seeing data across all sections of the same course — for example, jump from MCV4U1-4 to the global view of MCV4U1.",
-      eta: 3,
-      completed: false
+      eta: 0,
+      completed: true,
     },
     {
       icon: <Layers className="h-6 w-6 text-blue-500" />,
       title: "Class Search Functionality",
       description:
         "Quickly find and explore any class, including your own and your friends’, with a powerful and intuitive search experience.",
-      eta: 3,
-      completed: false
+      eta: 1,
+      completed: false,
     },
     {
       icon: <Sparkles className="h-6 w-6 text-purple-500" />,
       title: "Automated Weekly Sync",
       description:
         "Never miss an update. Your grades and data sync automatically every week — especially around midterms and final report periods.",
-      eta: 1,
-      completed: false
+      eta: 2,
+      completed: false,
     },
     {
       icon: <Globe className="h-6 w-6 text-orange-500" />,
       title: "School Identifier Feature",
       description:
         "Easily distinguish between classes from your main school and those from other schools — perfect for night, summer, or remote learning programs.",
-      eta: 3,
-      completed: false
+      eta: 0,
+      completed: true,
     },
   ].sort((a, b) => {
     if (a.completed === b.completed) {
@@ -85,9 +85,9 @@ export default async function Page() {
           {features.map((feature, index) => (
             <Card
               key={index}
-              className={`group relative flex flex-col overflow-hidden transition-all duration-300 hover:shadow-md ${
+              className={`group relative flex cursor-pointer flex-col overflow-hidden ${
                 feature.completed
-                  ? "border-green-500 bg-green-500/20 hover:bg-green-500/15"
+                  ? "border-green-500 bg-green-500/20 hover:border-green-500/60 hover:bg-green-500/15"
                   : ""
               }`}
             >

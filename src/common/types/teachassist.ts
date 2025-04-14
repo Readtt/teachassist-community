@@ -12,6 +12,7 @@ export type Course = {
   isFinal: boolean;
   isMidterm: boolean;
   link: string | null;
+  schoolIdentifier: string | null;
   assignments: Assignment[];
 };
 
