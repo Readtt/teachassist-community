@@ -1,12 +1,13 @@
 import "~/styles/globals.css";
 
+import { Analytics } from "@vercel/analytics/react";
 import { type Metadata } from "next";
 import { Poppins } from "next/font/google";
 import { Fragment } from "react";
 import { ThemeProvider } from "~/components/theme-provider";
 import { Toaster } from "~/components/ui/sonner";
-import { env } from "~/env";
 import { TooltipProvider } from "~/components/ui/tooltip";
+import { env } from "~/env";
 
 export const metadata: Metadata = {
   metadataBase: new URL(env.BETTER_AUTH_URL),
@@ -78,7 +79,7 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             <Fragment>
-              {children} <Toaster />
+              {children} <Toaster /> <Analytics />
             </Fragment>
           </ThemeProvider>
         </TooltipProvider>
