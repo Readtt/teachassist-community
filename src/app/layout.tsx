@@ -14,7 +14,16 @@ export const metadata: Metadata = {
   title: "Teachassist Community",
   description:
     "Track your grades, view class averages, and compare your performance with other students - all in one place.",
-  icons: [{ rel: "icon", url: "/favicon.png" }],
+  icons: [
+    { rel: "icon", url: "/favicon.ico" },
+    { rel: "icon", url: "/favicon-16x16.png", sizes: "16x16"},
+    { rel: "icon", url: "/favicon-32x32.png", sizes: "32x32"},
+
+    { rel: "icon", url: "/android-chrome-192x192.png", sizes: "192x192"},
+    { rel: "icon", url: "/android-chrome-512x512.png", sizes: "512x512"},
+
+    { rel: "icon", url: "/apple-touch-icon.png", sizes: "180x180"},
+  ],
   openGraph: {
     title: "Teachassist Community",
     description:
