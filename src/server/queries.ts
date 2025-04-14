@@ -155,6 +155,7 @@ export async function getRankingsData({
           THEN ${user.studentId}
           ELSE NULL 
         END`.as("studentId"),
+        schoolIdentifier: course.schoolIdentifier
         })
         .from(course)
         .leftJoin(user, eq(course.userId, user.id))

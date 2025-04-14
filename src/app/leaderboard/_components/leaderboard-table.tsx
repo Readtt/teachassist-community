@@ -19,6 +19,7 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/table";
+import { schoolIdentifierToAcronym } from "~/lib/utils";
 import type { getRankingsData } from "~/server/queries";
 
 // columns: rank, code, student, overall grade, pagination,
@@ -60,9 +61,9 @@ export default function LeaderboardTable({
         <TableHeader>
           <TableRow>
             <TableHead className="w-[100px] text-center">Rank</TableHead>
-            <TableHead>Class</TableHead>
-            <TableHead>Student</TableHead>
-            <TableHead className="text-right">Overall Grade</TableHead>
+            <TableHead>Overall Grade</TableHead>
+            <TableHead className="text-left">Student</TableHead>
+            <TableHead className="text-left">Class</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -91,7 +92,11 @@ export default function LeaderboardTable({
                 <TableCell className="text-center font-medium">
                   {data.rank}
                 </TableCell>
-                <TableCell>{data.code}</TableCell>
+                <TableCell className={`p-2 text-left font-semibold`}>
+                  <span className={gradeColor}>
+                    {data.overallMark ? `${data.overallMark}%` : "N/A"}
+                  </span>
+                </TableCell>
                 <TableCell>
                   {data.studentId ? (
                     <div>{data.studentId}</div>
@@ -99,9 +104,10 @@ export default function LeaderboardTable({
                     <div className="blur-xs select-none">000000000</div>
                   )}
                 </TableCell>
-                <TableCell className={`p-2 text-right font-semibold`}>
-                  <span className={gradeColor}>
-                    {data.overallMark ? `${data.overallMark}%` : "N/A"}
+                <TableCell className="text-left">
+                  {data.code}{" "}
+                  <span className="text-muted-foreground text-xs">
+                    {schoolIdentifierToAcronym(data.schoolIdentifier ?? "")}
                   </span>
                 </TableCell>
               </TableRow>
