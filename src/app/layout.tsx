@@ -30,6 +30,7 @@ export const metadata: Metadata = {
       "Track your grades, view class averages, and compare your performance with other students - all in one place.",
     url: env.BETTER_AUTH_URL,
     type: "website",
+    locale: "en_US",
     siteName: "Teachassist Community",
     images: [
       {
