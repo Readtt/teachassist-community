@@ -17,7 +17,8 @@
 - [x] Fix up all queries for global/class/school modes
 - [ ] Report issue
 - [ ] Error management ***
-- [ ] Search all classes  
+- [x] Search all classes  
+- [ ] Add total count for paginated pages
 - [ ] Add CRON job for auto sync per week
 - [ ] Use toolip proxy
 - [ ] Add landing page
