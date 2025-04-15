@@ -31,7 +31,7 @@ export default function Search() {
       <div className="relative w-full max-w-md">
         <SearchIcon className="text-muted-foreground absolute top-[50%] left-3 h-5 w-5 -translate-y-1/2" />
         <Input
-          placeholder="Search classes or schools..."
+          placeholder="Search codes, classes or schools..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           className="w-full pl-10"
