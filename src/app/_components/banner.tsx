@@ -18,9 +18,9 @@ const Banner = () => {
       <div className="container mx-auto flex items-center justify-between gap-2">
         <div className="flex-1 text-center">
           <span className="text-sm">
-            <span className="font-medium">🎉 Version 2.0 is here!</span>{" "}
+            <span className="font-medium">🎉 Version 2.1 is here!</span>{" "}
             <span className="text-blue-100">
-              Spread the word
+              Try class searching (new)
             </span>
           </span>
         </div>

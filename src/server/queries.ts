@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, eq, like, sql } from "drizzle-orm";
+import { and, eq, ilike, like, or, sql } from "drizzle-orm";
 import { headers } from "next/headers";
 import type { z } from "zod";
 import type { leaderboardModes } from "~/common/types/leaderboard-modes";
@@ -76,6 +76,55 @@ export async function getStudentClassAnonymity(code: string, school: string) {
     );
 
   return studentClassAnonymity?.isAnonymous;
+}
+
+export async function searchClasses(q: string, page = 1, limit = 10) {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) {
+    throw new Error("You must be logged in to perform this action.");
+  }
+
+  const offset = (page - 1) * limit;
+
+  // Get results
+  const results = await db
+    .selectDistinct({
+      code: course.code,
+      name: course.name,
+      schoolIdentifier: course.schoolIdentifier,
+    })
+    .from(course)
+    .where(
+      or(
+        ilike(course.code, `%${q}%`),
+        ilike(course.name, `%${q}%`),
+        ilike(course.schoolIdentifier, `%${q}%`)
+      )
+    )
+    .orderBy(course.code)
+    .limit(limit)
+    .offset(offset);
+
+  // Count total distinct rows (raw SQL for composite count)
+  const countResult = await db.execute(
+    sql`
+      SELECT COUNT(*) FROM (
+        SELECT DISTINCT ${course.code}, ${course.name}, ${course.schoolIdentifier}
+        FROM ${course}
+        WHERE ${course.code} ILIKE ${`%${q}%`}
+           OR ${course.name} ILIKE ${`%${q}%`}
+           OR ${course.schoolIdentifier} ILIKE ${`%${q}%`}
+      ) AS subquery;
+    `
+  );
+
+  const totalCount = parseInt((countResult?.[0]?.count ?? "0") as string);
+  const totalPages = Math.ceil(totalCount / limit);
+
+  return {
+    results,
+    totalPages,
+  };
 }
 
 export async function getRankingsData({
@@ -155,7 +204,7 @@ export async function getRankingsData({
           THEN ${user.studentId}
           ELSE NULL 
         END`.as("studentId"),
-        schoolIdentifier: course.schoolIdentifier
+          schoolIdentifier: course.schoolIdentifier,
         })
         .from(course)
         .leftJoin(user, eq(course.userId, user.id))

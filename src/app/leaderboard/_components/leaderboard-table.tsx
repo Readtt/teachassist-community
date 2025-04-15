@@ -1,16 +1,6 @@
 "use client";
 
 import { DessertIcon } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "~/components/ui/pagination";
-import { Separator } from "~/components/ui/separator";
 import {
   Table,
   TableBody,
@@ -21,6 +11,7 @@ import {
 } from "~/components/ui/table";
 import { schoolIdentifierToAcronym } from "~/lib/utils";
 import type { getRankingsData } from "~/server/queries";
+import PaginationControls from "./pagination-controls";
 
 // columns: rank, code, student, overall grade, pagination,
 // search: student
@@ -40,15 +31,6 @@ export default function LeaderboardTable({
   subTitle?: string;
   maxPages: number;
 }) {
-  const searchParams = useSearchParams();
-  const router = useRouter();
-
-  const createPageHref = (newPage: number) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("page", newPage.toString());
-    return `?${params.toString()}`;
-  };
-
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col justify-between">
@@ -115,77 +97,7 @@ export default function LeaderboardTable({
           })}
         </TableBody>
       </Table>
-      <Pagination>
-        <PaginationContent>
-          {/* Previous */}
-          <PaginationItem>
-            <PaginationPrevious
-              onClick={() => router.push(createPageHref(page - 1))}
-              aria-disabled={page <= 1}
-              className={
-                page <= 1 ? "pointer-events-none opacity-50" : undefined
-              }
-            />
-          </PaginationItem>
-
-          {/* First Page */}
-          <PaginationItem>
-            <PaginationLink
-              onClick={() => router.push(createPageHref(1))}
-              isActive={page === 1}
-            >
-              1
-            </PaginationLink>
-          </PaginationItem>
-
-          {/* Left Ellipsis */}
-          {page > 3 && <Separator orientation="vertical" />}
-
-          {/* Pages Around Current */}
-          {[-1, 0, 1].map((offset) => {
-            const p = page + offset;
-            if (p > 1 && p < maxPages) {
-              return (
-                <PaginationItem key={p}>
-                  <PaginationLink
-                    onClick={() => router.push(createPageHref(p))}
-                    isActive={page === p}
-                  >
-                    {p}
-                  </PaginationLink>
-                </PaginationItem>
-              );
-            }
-            return null;
-          })}
-
-          {/* Right Ellipsis */}
-          {page < maxPages - 3 && <Separator orientation="vertical" />}
-
-          {/* Last Page */}
-          {maxPages > 1 && (
-            <PaginationItem>
-              <PaginationLink
-                onClick={() => router.push(createPageHref(maxPages))}
-                isActive={page === maxPages}
-              >
-                {maxPages}
-              </PaginationLink>
-            </PaginationItem>
-          )}
-
-          {/* Next */}
-          <PaginationItem>
-            <PaginationNext
-              onClick={() => router.push(createPageHref(page + 1))}
-              aria-disabled={page >= maxPages}
-              className={
-                page >= maxPages ? "pointer-events-none opacity-50" : undefined
-              }
-            />
-          </PaginationItem>
-        </PaginationContent>
-      </Pagination>
+      <PaginationControls currentPage={page} maxPages={maxPages} />
     </div>
   );
 }

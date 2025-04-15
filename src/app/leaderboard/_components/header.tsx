@@ -31,10 +31,6 @@ export default function Header() {
             See how you compare to other students and view other classes
           </p>
         </div>
-        {/* <div className="flex flex-wrap items-center gap-4 md:gap-2">
-          <Search />
-          <HelpTooltip content="Search courses, classes and schools" />
-        </div> */}
       </div>
     </Fragment>
   );

@@ -20,7 +20,7 @@ export default function HelpTooltip({
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <Button disabled size={"icon"} variant={"secondary"}>
+        <Button size={"icon"} variant={"secondary"}>
           <HelpCircleIcon className={cn("h-4 w-4", className)} />
         </Button>
       </TooltipTrigger>

@@ -43,8 +43,8 @@ export default async function Page() {
       title: "Class Search Functionality",
       description:
         "Quickly find and explore any class, including your own and your friends’, with a powerful and intuitive search experience.",
-      eta: 1,
-      completed: false,
+      eta: 0,
+      completed: true,
     },
     {
       icon: <Sparkles className="h-6 w-6 text-purple-500" />,
