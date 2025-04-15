@@ -14,11 +14,13 @@ import { Separator } from "~/components/ui/separator";
 type PaginationControlsProps = {
   currentPage: number;
   maxPages: number;
+  totalRecords: number;
 };
 
 export default function PaginationControls({
   currentPage,
   maxPages,
+  totalRecords,
 }: PaginationControlsProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -30,7 +32,7 @@ export default function PaginationControls({
   };
 
   return (
-    <Pagination>
+    <Pagination className="justify-start">
       <PaginationContent>
         {/* Previous */}
         <PaginationItem>
@@ -101,6 +103,11 @@ export default function PaginationControls({
             }
           />
         </PaginationItem>
+      </PaginationContent>
+      <PaginationContent>
+        <p className="text-muted-foreground text-xs">
+          {totalRecords.toLocaleString()} records
+        </p>
       </PaginationContent>
     </Pagination>
   );

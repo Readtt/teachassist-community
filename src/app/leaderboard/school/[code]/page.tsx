@@ -72,6 +72,7 @@ export default async function Page({
         data={data.rankings}
         page={page}
         maxPages={data.maxPages}
+        totalRecords={data.totalStudents}
       />
     </Fragment>
   );

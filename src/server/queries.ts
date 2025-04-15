@@ -124,6 +124,7 @@ export async function searchClasses(q: string, page = 1, limit = 10) {
   return {
     results,
     totalPages,
+    totalCount
   };
 }
 

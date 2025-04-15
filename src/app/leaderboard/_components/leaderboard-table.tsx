@@ -24,12 +24,14 @@ export default function LeaderboardTable({
   maxPages,
   title,
   subTitle,
+  totalRecords
 }: {
   data: Awaited<ReturnType<typeof getRankingsData>>["data"]["rankings"];
   page?: number;
   title: string;
   subTitle?: string;
   maxPages: number;
+  totalRecords: number;
 }) {
   return (
     <div className="flex flex-col gap-4">
@@ -97,7 +99,7 @@ export default function LeaderboardTable({
           })}
         </TableBody>
       </Table>
-      <PaginationControls currentPage={page} maxPages={maxPages} />
+      <PaginationControls currentPage={page} maxPages={maxPages} totalRecords={totalRecords} />
     </div>
   );
 }

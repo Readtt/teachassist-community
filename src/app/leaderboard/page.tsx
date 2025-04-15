@@ -26,6 +26,7 @@ export default async function Page({
   let searchResults: Awaited<ReturnType<typeof searchClasses>> = {
     results: [],
     totalPages: 1,
+    totalCount: 0,
   };
   const page = parseInt(pageParam ?? "1");
 
@@ -61,9 +62,7 @@ export default async function Page({
                   <Card className="flex w-full cursor-pointer flex-row items-center justify-between px-4 py-2">
                     <div className="flex flex-col justify-center">
                       <p className="text-xs">{cls.code}</p>
-                      <p className="font-semibold">
-                        {cls.name ?? cls.code}
-                      </p>
+                      <p className="font-semibold">{cls.name ?? cls.code}</p>
                       <p className="text-muted-foreground text-xs">
                         {cls.schoolIdentifier}
                       </p>
@@ -96,9 +95,7 @@ export default async function Page({
                   <Card className="flex w-full cursor-pointer flex-row items-center justify-between px-4 py-2">
                     <div className="flex flex-col justify-center">
                       <p className="text-xs">{cls.code}</p>
-                      <p className="font-semibold">
-                        {cls.name ?? cls.code}
-                      </p>
+                      <p className="font-semibold">{cls.name ?? cls.code}</p>
                       <p className="text-muted-foreground text-xs">
                         {cls.schoolIdentifier}
                       </p>
@@ -108,10 +105,13 @@ export default async function Page({
                 </Link>
               ))
             )}
-            <PaginationControls
-              currentPage={page}
-              maxPages={searchResults.totalPages}
-            />
+            <div className="mt-2">
+              <PaginationControls
+                currentPage={page}
+                maxPages={searchResults.totalPages}
+                totalRecords={searchResults.totalCount}
+              />
+            </div>
           </div>
         )}
       </div>

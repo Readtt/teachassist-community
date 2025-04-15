@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
 import { SearchIcon } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import { Input } from "~/components/ui/input";
-import HelpTooltip from "~/components/help-tooltip";
 
 export default function Search() {
   const router = useRouter();
@@ -32,13 +31,12 @@ export default function Search() {
       <div className="relative w-full max-w-md">
         <SearchIcon className="text-muted-foreground absolute top-[50%] left-3 h-5 w-5 -translate-y-1/2" />
         <Input
-          placeholder="Search..."
+          placeholder="Search classes or schools..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           className="w-full pl-10"
         />
       </div>
-      <HelpTooltip content="Search classes" />
     </div>
   );
 }
