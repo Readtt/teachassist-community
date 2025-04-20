@@ -105,7 +105,7 @@ export default function PaginationControls({
         </PaginationItem>
       </PaginationContent>
       <PaginationContent>
-        <p className="text-muted-foreground text-xs">
+        <p className="text-muted-foreground text-xs ml-1">
           {totalRecords.toLocaleString()} records
         </p>
       </PaginationContent>

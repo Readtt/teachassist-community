@@ -15,10 +15,11 @@
 - [x] Resync all users before deploying to prod
 - [x] Auto Sync on successful LOGIN/SIGNUP
 - [x] Fix up all queries for global/class/school modes
+- [x] Search all classes  
+- [x] Add total count for paginated pages
+- [x] Fix Your rank bug where it doesnt count the reduplicated rows in the leaderboard
 - [ ] Report issue
 - [ ] Error management ***
-- [x] Search all classes  
-- [ ] Add total count for paginated pages
 - [ ] Add CRON job for auto sync per week
 - [ ] Use toolip proxy
 - [ ] Add landing page

@@ -98,8 +98,8 @@ export async function searchClasses(q: string, page = 1, limit = 10) {
       or(
         ilike(course.code, `%${q}%`),
         ilike(course.name, `%${q}%`),
-        ilike(course.schoolIdentifier, `%${q}%`)
-      )
+        ilike(course.schoolIdentifier, `%${q}%`),
+      ),
     )
     .orderBy(course.code)
     .limit(limit)
@@ -115,7 +115,7 @@ export async function searchClasses(q: string, page = 1, limit = 10) {
            OR ${course.name} ILIKE ${`%${q}%`}
            OR ${course.schoolIdentifier} ILIKE ${`%${q}%`}
       ) AS subquery;
-    `
+    `,
   );
 
   const totalCount = parseInt((countResult?.[0]?.count ?? "0") as string);
@@ -124,7 +124,7 @@ export async function searchClasses(q: string, page = 1, limit = 10) {
   return {
     results,
     totalPages,
-    totalCount
+    totalCount,
   };
 }
 
@@ -231,10 +231,31 @@ export async function getRankingsData({
     .filter((m) => m.overallMark !== null)
     .sort((a, b) => Number(b.overallMark) - Number(a.overallMark));
 
-  const studentIndex = sortedMarks.findIndex(
-    (m) => m.userId === session.user.id,
-  );
-  const studentRank = studentIndex !== -1 ? studentIndex + 1 : null;
+  // --- Emulate sql RANK function in js ---
+  let studentRank = null;
+  let currentRank = 1;
+  let prevMark = null;
+  let skip = 0;
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  for (const [_, markObj] of sortedMarks.entries()) {
+    const mark = Number(markObj.overallMark);
+
+    if (prevMark !== null && mark === prevMark) {
+      skip++;
+    } else {
+      currentRank += skip;
+      skip = 1;
+    }
+
+    if (markObj.userId === session.user.id) {
+      studentRank = currentRank;
+      break;
+    }
+
+    prevMark = mark;
+  }
+
   const studentAverage = studentCourse?.overallMark ?? null;
 
   // --- Compute overall class/school/global average ---
