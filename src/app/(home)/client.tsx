@@ -40,12 +40,34 @@ export default function Home({
 
   async function handleSync() {
     setIsSyncing(true);
-    const { error } = await syncTAFromClient();
+    const { error, data } = await syncTAFromClient();
 
     if (error) {
       toast.error(error);
     } else {
-      toast.success("Synced teachassist data successfully.");
+      if (data?.updates?.length) {
+        data.updates.forEach((u) => {
+          const prev =
+            u.previousMark !== null ? parseFloat(u.previousMark) : NaN;
+          const next = u.newMark !== null ? parseFloat(u.newMark) : NaN;
+
+          const percentageChange =
+            !isNaN(prev) && !isNaN(next) && prev !== 0
+              ? (((next - prev) / prev) * 100).toFixed(1)
+              : null;
+
+          const changeIndicator =
+            percentageChange !== null
+              ? ` (${Number(percentageChange) > 0 ? "+" : ""}${percentageChange}%)`
+              : "";
+
+          toast.success(
+            `✅ ${u.code}: ${u.previousMark ?? "N/A"}% → ${u.newMark ?? "N/A"}%${changeIndicator}`,
+          );
+        });
+      } else {
+        toast.success("✅ Sync complete — no changes found.");
+      }
     }
 
     setIsSyncing(false);

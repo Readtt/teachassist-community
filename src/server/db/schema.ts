@@ -4,13 +4,12 @@
 import {
   boolean,
   jsonb,
+  numeric,
   pgTableCreator,
   text,
   timestamp,
-  numeric,
 } from "drizzle-orm/pg-core";
-import { type Assignment, type Course } from "~/common/types/teachassist";
-import { relations } from "drizzle-orm";
+import { type Course } from "~/common/types/teachassist";
 
 /**
  * This is an example of how to use the multi-project schema feature of Drizzle ORM. Use the same
@@ -21,16 +20,6 @@ import { relations } from "drizzle-orm";
 export const createTable = pgTableCreator(
   (name) => `teachassist-community_${name}`,
 );
-
-export const assignment = createTable("assignment", {
-  id: text("id").primaryKey(),
-  name: text("name").notNull(),
-  feedback: text("feedback"),
-  categories: jsonb("categories").notNull().$type<Assignment["categories"]>(), // ← stores KU, T, C, A, O
-  courseId: text("course_id").notNull().references(() => course.id, {
-    onDelete: "cascade",
-  }),
-});
 
 export const course = createTable("course", {
   id: text("id").primaryKey(),
@@ -43,23 +32,12 @@ export const course = createTable("course", {
   isFinal: boolean("is_final").notNull().default(false),
   isMidterm: boolean("is_midterm").notNull().default(false),
   link: text("link"),
-  schoolIdentifier: text("school_identifier"),
+  schoolIdentifier: text("school_identifier").notNull(),
   isAnonymous: boolean("is_anonymous").notNull().default(true),
   userId: text("user_id").notNull().references(() => user.id, {
     onDelete: "cascade",
   })
 });
-
-export const courseRelations = relations(course, ({ many }) => ({
-  assignments: many(assignment),
-}));
-
-export const assignmentRelations = relations(assignment, ({ one }) => ({
-  course: one(course, {
-    fields: [assignment.courseId],
-    references: [course.id],
-  }),
-}));
 
 export const user = createTable("user", {
   id: text("id").primaryKey(),

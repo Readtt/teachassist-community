@@ -12,20 +12,7 @@ export type Course = {
   isFinal: boolean;
   isMidterm: boolean;
   link: string | null;
-  schoolIdentifier: string | null;
-  assignments: Assignment[];
-};
-
-export type Assignment = {
-  name: string;
-  feedback: string | null;
-  categories: {
-    KU: Category | null;
-    T: Category | null;
-    C: Category | null;
-    A: Category | null;
-    O: Category | null;
-  };
+  schoolIdentifier: string;
 };
 
 export interface Category {

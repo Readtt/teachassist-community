@@ -131,6 +131,11 @@ export default async function syncTA({
     const userId = existingUser.id;
     const nowISO = now.toISOString();
 
+    const updates: {
+      code: string;
+      previousMark: string | null;
+      newMark: string | null;
+    }[] = [];
     await db.transaction(async (trx) => {
       // Delete outdated courses
       await trx
@@ -146,7 +151,7 @@ export default async function syncTA({
         );
 
       const newCourseCodes = courses.map((c) => c.code);
-        
+
       // Delete courses for the user that are NOT in the new course code list
       if (newCourseCodes.length > 0) {
         await trx
@@ -166,11 +171,26 @@ export default async function syncTA({
         const [existingCourse] = await trx
           .select()
           .from(course)
-          .where(and(eq(course.code, c.code), eq(course.userId, userId)));
+          .where(
+            and(
+              eq(course.code, c.code),
+              eq(course.schoolIdentifier, c.schoolIdentifier),
+              eq(course.userId, userId),
+            ),
+          );
 
         const courseId = existingCourse?.id ?? uuidv4();
 
         if (existingCourse) {
+          const previousMark = existingCourse.overallMark;
+          const newMark = c.overallMark?.toString() ?? null;
+          if (previousMark !== newMark)
+            updates.push({
+              code: c.code,
+              previousMark,
+              newMark,
+            });
+
           await trx
             .update(course)
             .set({
@@ -212,7 +232,7 @@ export default async function syncTA({
       }
     });
 
-    return { data: { success: true } };
+    return { data: { success: true, updates } };
   } catch (e) {
     if (e instanceof Error) {
       return { error: e.message };
@@ -303,7 +323,15 @@ async function getTAReports({
 
       const markInfo = getMark(mark);
 
-      if (!code || !startTime || !endTime || !block || !room) continue;
+      if (
+        !code ||
+        !startTime ||
+        !endTime ||
+        !block ||
+        !room ||
+        !schoolIdentifier
+      )
+        continue;
 
       const course: Course = {
         code,
@@ -317,7 +345,6 @@ async function getTAReports({
         },
         ...markInfo,
         link,
-        assignments: [],
         schoolIdentifier,
       };
 

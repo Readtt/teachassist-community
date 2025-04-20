@@ -18,6 +18,7 @@
 - [x] Search all classes  
 - [x] Add total count for paginated pages
 - [x] Fix Your rank bug where it doesnt count the reduplicated rows in the leaderboard
+- [x] Add grade updates notifications
 - [ ] Report issue
 - [ ] Error management ***
 - [ ] Add CRON job for auto sync per week

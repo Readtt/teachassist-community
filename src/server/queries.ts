@@ -294,10 +294,7 @@ export async function getUserClasses() {
     throw new Error("You must be logged in to perform this action.");
 
   const courses = await db.query.course.findMany({
-    where: (model, { eq, and }) => and(eq(model.userId, session.user.id)),
-    with: {
-      assignments: true,
-    },
+    where: (model, { eq, and }) => and(eq(model.userId, session.user.id))
   });
 
   courses.sort((a, b) => {
