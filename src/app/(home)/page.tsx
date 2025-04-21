@@ -17,7 +17,7 @@ export default async function HomePage() {
   return (
     <Fragment>
       <Navbar session={session} />
-      <Home session={session} userClasses={userClasses}/>
+      <Home session={session} userClasses={userClasses} />
     </Fragment>
   );
 }

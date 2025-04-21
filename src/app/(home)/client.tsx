@@ -1,6 +1,6 @@
 "use client";
 
-import { ChartLineIcon, RefreshCcw, UserIcon } from "lucide-react";
+import { ChartLineIcon, FlagIcon, RefreshCcw, UserIcon } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -86,6 +86,17 @@ export default function Home({
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          <Button
+            onClick={() =>
+              window.open(
+                "https://form.asana.com/?k=_Nd0NPG-oA_aMGTzErr4Yg&d=1143782360594635",
+                "_blank",
+              )
+            }
+            variant={"secondary"}
+          >
+            <FlagIcon /> Report Issue
+          </Button>
           <Button
             onClick={handleSync}
             LoadingIcon={RefreshCcw}
