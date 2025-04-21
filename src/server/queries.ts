@@ -164,7 +164,7 @@ export async function getRankingsData({
       );
       break;
     case "global":
-      whereClause = like(course.code, `${globalCode}%`);
+      whereClause = like(course.code, `%${globalCode}%`);
       break;
   }
 
