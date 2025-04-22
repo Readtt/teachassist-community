@@ -93,7 +93,7 @@ export default function Home({
                 "_blank",
               )
             }
-            variant={"secondary"}
+            variant={"outline"}
           >
             <FlagIcon /> Report Issue
           </Button>
@@ -101,7 +101,7 @@ export default function Home({
             onClick={handleSync}
             LoadingIcon={RefreshCcw}
             isLoading={isSyncing}
-            variant="outline"
+            variant="secondary"
           >
             {!isSyncing && <RefreshCcw />}
             Sync Data
