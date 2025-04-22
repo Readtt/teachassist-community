@@ -126,10 +126,10 @@ export default function Login() {
                       <FormItem>
                         <FormLabel>Student Number</FormLabel>
                         <FormControl>
-                          <Input placeholder="000000000" {...field} />
+                          <Input placeholder="123456789" {...field} />
                         </FormControl>
                         <FormDescription>
-                          This is your school student number
+                          Your 9-digit YRDSB student number
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
