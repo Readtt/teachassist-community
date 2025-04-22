@@ -20,18 +20,18 @@ import {
 } from "~/components/ui/form";
 import { Input } from "~/components/ui/input";
 import { authClient } from "~/lib/auth-client";
-import { studentIdToEmail } from "~/lib/utils";
+import { schoolIdentifierToAcronym, studentIdToEmail } from "~/lib/utils";
 import Logo from "../_components/logo";
 import { doesUserExistByEmail } from "./actions";
 
 const TRUSTED_SCHOOLS = [
-  "Hodan Nalayeh SS",
-  "Thornlea SS",
-  "Tommy Douglas SS",
+  "Hodan Nalayeh Secondary School",
+  "Thornlea Secondary School",
+  "Tommy Douglas Secondary School",
   "Maple High School",
   "Westmount Collegiate Institute",
-  "King City SS",
-  "Markville SS",
+  "King City Secondary School",
+  "Markville Secondary School",
 ];
 
 export default function Login() {
@@ -168,7 +168,7 @@ export default function Login() {
                       key={i}
                       className="bg-muted rounded px-2 py-0.5 text-[10px]"
                     >
-                      {school}
+                      {schoolIdentifierToAcronym(school)}
                     </span>
                   ))}
                 </div>
