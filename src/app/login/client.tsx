@@ -31,7 +31,7 @@ const TRUSTED_SCHOOLS = [
   "Maple High School",
   "Westmount Collegiate Institute",
   "King City SS",
-  "Markville SS"
+  "Markville SS",
 ];
 
 export default function Login() {
@@ -102,10 +102,16 @@ export default function Login() {
         <div className="grid lg:grid-cols-2">
           <div className="relative overflow-hidden py-10">
             <div className="mx-auto my-auto flex h-full w-full max-w-md flex-col justify-center gap-4 p-6">
-              <div className="mb-6 flex flex-col items-center text-center">
-                <Link href="/" className="mb-6 flex items-center gap-2">
+              <div className="mb-6 flex flex-col items-center gap-2 text-center">
+                <Link
+                  href="/"
+                  className="flex flex-col items-center gap-2 md:flex-row"
+                >
                   <Logo className="h-8 w-8" />
                   <h1 className="text-xl font-bold">Teachassist Community</h1>
+                  <p className="text-muted-foreground text-center text-sm italic">
+                    All rankings are anonymous — no names shown.
+                  </p>
                 </Link>
               </div>
               <Form {...form}>
@@ -153,7 +159,9 @@ export default function Login() {
                 </form>
               </Form>
               <div className="text-muted-foreground space-y-1 text-center text-xs">
-                <p>Trusted by students from:</p>
+                <p>
+                  Trusted by students from {TRUSTED_SCHOOLS.length}+ schools:
+                </p>
                 <div className="mt-2 flex flex-wrap justify-center gap-x-2 gap-y-1">
                   {TRUSTED_SCHOOLS.map((school, i) => (
                     <span
