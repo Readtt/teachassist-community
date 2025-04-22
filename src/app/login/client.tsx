@@ -24,6 +24,16 @@ import { studentIdToEmail } from "~/lib/utils";
 import Logo from "../_components/logo";
 import { doesUserExistByEmail } from "./actions";
 
+const TRUSTED_SCHOOLS = [
+  "Hodan Nalayeh SS",
+  "Thornlea SS",
+  "Tommy Douglas SS",
+  "Maple High School",
+  "Westmount Collegiate Institute",
+  "King City SS",
+  "Markville SS"
+];
+
 export default function Login() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
@@ -142,6 +152,19 @@ export default function Login() {
                   </Button>
                 </form>
               </Form>
+              <div className="text-muted-foreground space-y-1 text-center text-xs">
+                <p>Trusted by students from:</p>
+                <div className="mt-2 flex flex-wrap justify-center gap-x-2 gap-y-1">
+                  {TRUSTED_SCHOOLS.map((school, i) => (
+                    <span
+                      key={i}
+                      className="bg-muted rounded px-2 py-0.5 text-[10px]"
+                    >
+                      {school}
+                    </span>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
 
