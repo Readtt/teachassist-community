@@ -48,11 +48,11 @@ export default async function Page() {
     },
     {
       icon: <Sparkles className="h-6 w-6 text-purple-500" />,
-      title: "Automated Weekly Sync",
+      title: "Automated Bi-Weekly Sync",
       description:
-        "Never miss an update. Your grades and data sync automatically every week — especially around midterms and final report periods.",
-      eta: 2,
-      completed: false,
+        "Never miss an update. Your grades and data sync automatically every other week — especially around midterms and final report periods.",
+      eta: 0,
+      completed: true,
     },
     {
       icon: <Globe className="h-6 w-6 text-orange-500" />,
