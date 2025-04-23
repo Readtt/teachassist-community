@@ -89,13 +89,15 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             <Fragment>
-              {children} <Toaster />{" "}
-              <Script
-                async
-                defer
-                src="https://cloud.umami.is/script.js"
-                data-website-id="453c6655-15c5-4fba-b862-3009cc69fd0c"
-              />
+              {children} <Toaster />
+              {env.NODE_ENV === "production" && (
+                <Script
+                  async
+                  defer
+                  src="https://cloud.umami.is/script.js"
+                  data-website-id="453c6655-15c5-4fba-b862-3009cc69fd0c"
+                />
+              )}
             </Fragment>
           </ThemeProvider>
         </TooltipProvider>
