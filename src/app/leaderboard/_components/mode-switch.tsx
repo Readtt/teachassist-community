@@ -32,6 +32,9 @@ export default function ModeSwitch({
       case "global":
         router.push(`/leaderboard/global/${extra.code}?school=${extra.school}`);
         break;
+      // case "teams":
+      //   router.push(`/leaderboard/global/${extra.code}?school=${extra.school}`);
+      //   break;
     }
   };
 
@@ -47,6 +50,11 @@ export default function ModeSwitch({
       icon: <GlobeIcon className="h-4 w-4" />,
       label: "Global",
     },
+    // {
+    //   value: "teams",
+    //   icon: <UsersIcon className="h-4 w-4" />,
+    //   label: "Teams",
+    // },
   ];
 
   return (

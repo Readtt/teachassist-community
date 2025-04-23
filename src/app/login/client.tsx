@@ -166,7 +166,7 @@ export default function Login() {
                   {TRUSTED_SCHOOLS.map((school, i) => (
                     <span
                       key={i}
-                      className="bg-muted rounded px-2 py-0.5 text-[10px]"
+                      className="bg-muted rounded px-2 py-0.5 text-xs"
                     >
                       {schoolIdentifierToAcronym(school)}
                     </span>

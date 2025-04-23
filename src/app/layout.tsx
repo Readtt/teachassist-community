@@ -1,8 +1,8 @@
 import "~/styles/globals.css";
 
-import { Analytics } from "@vercel/analytics/react";
 import { type Metadata } from "next";
 import { Poppins } from "next/font/google";
+import Script from "next/script";
 import { Fragment } from "react";
 import { ThemeProvider } from "~/components/theme-provider";
 import { Toaster } from "~/components/ui/sonner";
@@ -16,13 +16,13 @@ export const metadata: Metadata = {
     "Track your grades, view class averages, and compare your performance with other students - all in one place.",
   icons: [
     { rel: "icon", url: "/favicon.ico" },
-    { rel: "icon", url: "/favicon-16x16.png", sizes: "16x16"},
-    { rel: "icon", url: "/favicon-32x32.png", sizes: "32x32"},
+    { rel: "icon", url: "/favicon-16x16.png", sizes: "16x16" },
+    { rel: "icon", url: "/favicon-32x32.png", sizes: "32x32" },
 
-    { rel: "icon", url: "/android-chrome-192x192.png", sizes: "192x192"},
-    { rel: "icon", url: "/android-chrome-512x512.png", sizes: "512x512"},
+    { rel: "icon", url: "/android-chrome-192x192.png", sizes: "192x192" },
+    { rel: "icon", url: "/android-chrome-512x512.png", sizes: "512x512" },
 
-    { rel: "icon", url: "/apple-touch-icon.png", sizes: "180x180"},
+    { rel: "icon", url: "/apple-touch-icon.png", sizes: "180x180" },
   ],
   openGraph: {
     title: "Teachassist Community",
@@ -89,7 +89,13 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             <Fragment>
-              {children} <Toaster /> <Analytics />
+              {children} <Toaster />{" "}
+              <Script
+                async
+                defer
+                src="https://cloud.umami.is/script.js"
+                data-website-id="453c6655-15c5-4fba-b862-3009cc69fd0c"
+              />
             </Fragment>
           </ThemeProvider>
         </TooltipProvider>
