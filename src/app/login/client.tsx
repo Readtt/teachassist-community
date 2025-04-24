@@ -32,6 +32,9 @@ const TRUSTED_SCHOOLS = [
   "Westmount Collegiate Institute",
   "King City Secondary School",
   "Markville Secondary School",
+  "Emily Carr Secondary School",
+  "Alexander Mackenzie High School",
+  "Bur Oak Secondary School"
 ];
 
 export default function Login() {
