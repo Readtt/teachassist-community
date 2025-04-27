@@ -27,6 +27,7 @@ import { doesUserExistByEmail } from "./actions";
 const TRUSTED_SCHOOLS = [
   "Hodan Nalayeh Secondary School",
   "Thornlea Secondary School",
+  "Thornhill Secondary School",
   "Tommy Douglas Secondary School",
   "Maple High School",
   "Westmount Collegiate Institute",
@@ -34,7 +35,8 @@ const TRUSTED_SCHOOLS = [
   "Markville Secondary School",
   "Emily Carr Secondary School",
   "Alexander Mackenzie High School",
-  "Bur Oak Secondary School"
+  "Bur Oak Secondary School",
+  "Stephen Lewis Secondary School"
 ];
 
 export default function Login() {
