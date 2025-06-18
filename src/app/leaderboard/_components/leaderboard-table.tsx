@@ -78,15 +78,32 @@ export default function LeaderboardTable({
                 </TableCell>
                 <TableCell className={`p-2 text-left font-semibold`}>
                   <span className={gradeColor}>
-                    {data.overallMark ? `${data.overallMark}%` : "N/A"}
+                    {data.overallMark ? `${Number(data.overallMark).toFixed(1)}%` : "N/A"}
                   </span>
                 </TableCell>
-                <TableCell>
+                <TableCell className="flex items-center gap-2">
                   {data.studentId ? (
                     <div>{data.studentId}</div>
                   ) : (
                     <div className="blur-xs select-none">000000000</div>
                   )}
+                  <div className="h-2 w-2 rounded-full bg-green-500"></div>
+                  <span className="text-xs text-muted-foreground">
+                    Synced {data.lastSyncedAt
+                      ? (() => {
+                          const now = new Date();
+                          const last = new Date(data.lastSyncedAt);
+                          const diff = Math.floor((now.getTime() - last.getTime()) / 1000);
+                          if (diff < 60) return "now";
+                          if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+                          if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+                          if (diff < 604800) return `${Math.floor(diff / 86400)}d ago`;
+                          if (diff < 2592000) return `${Math.floor(diff / 604800)}w ago`;
+                          if (diff < 31536000) return `${Math.floor(diff / 2592000)}mo ago`;
+                          return `${Math.floor(diff / 31536000)}y ago`;
+                        })()
+                      : null}
+                  </span>
                 </TableCell>
                 <TableCell className="text-left">
                   {data.code}{" "}

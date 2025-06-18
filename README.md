@@ -20,10 +20,9 @@
 - [x] Fix Your rank bug where it doesnt count the reduplicated rows in the leaderboard
 - [x] Add grade updates notifications
 - [x] Switch to umami analytics
-- [ ] Use posthog analytics
 - [x] Add CRON job for auto sync per week
-- [ ] Add teams
-- [ ] Report issue
-- [ ] Error management ***
+- [x] Report issue
+- [x] Error management ***
 - [ ] Use toolip proxy
-- [ ] Add landing page
+- [x] Delete user if ta.yrdsb password does not work in sync
+- [x] Sync new ta password if they change it for auth

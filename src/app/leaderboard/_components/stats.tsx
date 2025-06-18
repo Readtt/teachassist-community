@@ -14,7 +14,7 @@ function getColor(value: number | null) {
 
 // Helper to format average values
 function formatAverage(value: number | null) {
-  return value == null ? "N/A" : `${Math.round(value * 100) / 100}%`;
+  return value == null ? "N/A" : `${Number(value).toFixed(2)}%`;
 }
 
 // Helper to format student average which comes in as string
@@ -56,7 +56,7 @@ export default function Stats({
       <StatCard
         title="Your Average"
         description={averageDescription}
-        value={studentAverage ? `${studentAverage}%` : "N/A"}
+        value={studentAverage ? `${Number(studentAverage).toFixed(2)}%` : "N/A"}
         icon={UserIcon}
         iconColor={studentColors.icon}
         valueTextColor={studentColors.text}

@@ -26,7 +26,7 @@ export async function loginTA(
   password?: string,
 ): Promise<LoginTA> {
   if (!studentId || !password)
-    throw new Error("Invalid student number or password");
+    throw new Error("Invalid student number or password, empty");
 
   const URL = `https://ta.yrdsb.ca/live/index.php?username=${studentId}&password=${password}&submit=Login&subject_id=0`;
   const loginResponse = await tryCatch(

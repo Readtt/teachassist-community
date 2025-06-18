@@ -65,7 +65,7 @@ export default function ClassCard({
                 "text-muted-foreground": overallMark == null,
               })}
             >
-              {overallMark ? `${overallMark}%` : "N/A"}
+              {overallMark ? `${Number(overallMark).toFixed(1)}%` : "N/A"}
             </span>
           </div>
           <Progress

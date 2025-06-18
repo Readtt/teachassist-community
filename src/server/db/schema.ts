@@ -48,8 +48,9 @@ export const user = createTable("user", {
   createdAt: timestamp("created_at").notNull(),
   updatedAt: timestamp("updated_at").notNull(),
   taPassword: text('ta_password').notNull(),
-  studentId: text('student_id').notNull(),
+  studentId: text('student_id').notNull(), // TODO: make unique?
   lastSyncedAt: timestamp("last_synced_at"),
+  isActive: boolean("is_active").notNull().default(true),
 });
 
 export const session = createTable("session", {

@@ -57,27 +57,7 @@ export async function toggleAnonymous(code: string, school: string) {
   }
 }
 
-export async function getStudentClassAnonymity(code: string, school: string) {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session)
-    throw new Error("You must be logged in to perform this action.");
-
-  const [studentClassAnonymity] = await db
-    .select({
-      isAnonymous: course.isAnonymous,
-    })
-    .from(course)
-    .where(
-      and(
-        eq(course.userId, session.user.id),
-        eq(course.code, code),
-        eq(course.schoolIdentifier, school),
-      ),
-    );
-
-  return studentClassAnonymity?.isAnonymous;
-}
-
+// TODO: change code so that it just shows courses that have at least one active user (current code works)
 export async function searchClasses(q: string, page = 1, limit = 10) {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) {
@@ -86,7 +66,7 @@ export async function searchClasses(q: string, page = 1, limit = 10) {
 
   const offset = (page - 1) * limit;
 
-  // Get results
+  // Get results, only include courses where the user is active
   const results = await db
     .selectDistinct({
       code: course.code,
@@ -94,26 +74,34 @@ export async function searchClasses(q: string, page = 1, limit = 10) {
       schoolIdentifier: course.schoolIdentifier,
     })
     .from(course)
+    .innerJoin(user, eq(course.userId, user.id))
     .where(
-      or(
-        ilike(course.code, `%${q}%`),
-        ilike(course.name, `%${q}%`),
-        ilike(course.schoolIdentifier, `%${q}%`),
+      and(
+        eq(user.isActive, true),
+        or(
+          ilike(course.code, `%${q}%`),
+          ilike(course.name, `%${q}%`),
+          ilike(course.schoolIdentifier, `%${q}%`),
+        ),
       ),
     )
     .orderBy(course.code)
     .limit(limit)
     .offset(offset);
 
-  // Count total distinct rows (raw SQL for composite count)
+  // Count total distinct rows (raw SQL for composite count), only for active users
   const countResult = await db.execute(
     sql`
       SELECT COUNT(*) FROM (
-        SELECT DISTINCT ${course.code}, ${course.name}, ${course.schoolIdentifier}
-        FROM ${course}
-        WHERE ${course.code} ILIKE ${`%${q}%`}
-           OR ${course.name} ILIKE ${`%${q}%`}
-           OR ${course.schoolIdentifier} ILIKE ${`%${q}%`}
+        SELECT DISTINCT c.code, c.name, c.school_identifier
+        FROM ${course} AS c
+        INNER JOIN ${user} AS u ON c.user_id = u.id
+        WHERE u.is_active = true
+          AND (
+            c.code ILIKE ${`%${q}%`}
+            OR c.name ILIKE ${`%${q}%`}
+            OR c.school_identifier ILIKE ${`%${q}%`}
+          )
       ) AS subquery;
     `,
   );
@@ -149,29 +137,35 @@ export async function getRankingsData({
   const globalCode = classCodeToGlobalCode(code);
 
   // --- Determine filter criteria based on selected leaderboard mode ---
+  // Always filter for active users
   let whereClause;
   switch (mode) {
     case "class":
       whereClause = and(
         eq(course.code, code),
         eq(course.schoolIdentifier, school),
+        eq(user.isActive, true)
       );
       break;
     case "school":
       whereClause = and(
         like(course.code, `%${globalCode}%`),
         eq(course.schoolIdentifier, school),
+        eq(user.isActive, true)
       );
       break;
     case "global":
-      whereClause = like(course.code, `%${globalCode}%`);
+      whereClause = and(
+        like(course.code, `%${globalCode}%`),
+        eq(user.isActive, true)
+      );
       break;
   }
 
   // --- Fetch relevant data concurrently ---
   const [studentCourse, allMarks, totalCountResult, rankedCourses, anonymity] =
     await Promise.all([
-      // Student's course record
+      // Student's course record (no need to filter for isActive here, just for the current user)
       db.query.course.findFirst({
         where: (model, { eq, and }) =>
           and(
@@ -180,17 +174,19 @@ export async function getRankingsData({
             eq(model.schoolIdentifier, school),
           ),
       }),
-      // All student marks for ranking calculations
+      // All student marks for ranking calculations (only active users)
       db
         .select({ userId: course.userId, overallMark: course.overallMark })
         .from(course)
+        .innerJoin(user, eq(course.userId, user.id))
         .where(whereClause),
-      // Total number of students for pagination
+      // Total number of students for pagination (only active users)
       db
         .select({ count: sql<number>`COUNT(*)` })
         .from(course)
+        .innerJoin(user, eq(course.userId, user.id))
         .where(whereClause),
-      // Paginated leaderboard with calculated rank and conditional anonymity
+      // Paginated leaderboard with calculated rank and conditional anonymity (only active users)
       db
         .select({
           id: course.id,
@@ -206,6 +202,7 @@ export async function getRankingsData({
           ELSE NULL 
         END`.as("studentId"),
           schoolIdentifier: course.schoolIdentifier,
+          lastSyncedAt: user.lastSyncedAt
         })
         .from(course)
         .leftJoin(user, eq(course.userId, user.id))

@@ -1,5 +1,5 @@
 import { logger, schedules, timeout } from "@trigger.dev/sdk/v3";
-import { isNull, lt, or } from "drizzle-orm";
+import { eq, isNull, lt, or } from "drizzle-orm";
 import pLimit from "p-limit";
 import { decryptPassword } from "~/lib/crypto";
 import { db } from "~/server/db";
@@ -43,7 +43,7 @@ export const syncTask = schedules.task({
       let successCount = 0;
       let errorCount = 0;
 
-      const limit = pLimit(8); // Lightweight HTTPS + DB update
+      const limit = pLimit(8);
 
       await Promise.allSettled(
         validUsers.map((u) =>
@@ -63,10 +63,30 @@ export const syncTask = schedules.task({
             } catch (error) {
               const message =
                 error instanceof Error ? error.message : String(error);
-              logger.error(`❌ Sync failed for ${u.studentId}`, {
-                error: message,
-              });
-              errorCount++;
+
+                if(message === "Invalid student number or password") {
+                  logger.error(`❌ Unable to login for ${u.studentId}... setting status to inactive`, {
+                    error: message,
+                  });
+        
+                  try {
+                    await db.update(user).set({
+                      isActive: false,
+                    }).where(eq(user.id, u.id));
+                    logger.log(`🗑️ Set user ${u.studentId} (${u.id}) to inactive`);
+                  } catch (deleteErr) {
+                    logger.error(`❌ Failed to set user ${u.studentId} to inactive`, {
+                      error: deleteErr instanceof Error
+                        ? deleteErr.message
+                        : String(deleteErr),
+                    });
+                  }
+                } else {
+                  logger.error(`❌ Sync failed for ${u.studentId}`, {
+                    error: message,
+                  });
+                  errorCount++;
+                }
             }
           }),
         ),
