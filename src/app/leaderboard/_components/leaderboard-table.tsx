@@ -9,7 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/table";
-import { schoolIdentifierToAcronym } from "~/lib/utils";
+import { cn, schoolIdentifierToAcronym } from "~/lib/utils";
 import type { getRankingsData } from "~/server/queries";
 import PaginationControls from "./pagination-controls";
 
@@ -24,7 +24,7 @@ export default function LeaderboardTable({
   maxPages,
   title,
   subTitle,
-  totalRecords
+  totalRecords,
 }: {
   data: Awaited<ReturnType<typeof getRankingsData>>["data"]["rankings"];
   page?: number;
@@ -77,9 +77,21 @@ export default function LeaderboardTable({
                   {data.rank}
                 </TableCell>
                 <TableCell className={`p-2 text-left font-semibold`}>
-                  <span className={gradeColor}>
-                    {data.overallMark ? `${Number(data.overallMark).toFixed(1)}%` : "N/A"}
-                  </span>
+                  <div className="flex items-center">
+                    <span className={gradeColor}>
+                      {data.overallMark
+                        ? `${Number(data.overallMark).toFixed(1)}%`
+                        : "N/A"}
+                    </span>
+                    <span
+                      className={cn("ml-1 text-xs font-bold tracking-tighter", {
+                        "text-red-500": data.isFinal,
+                        "text-orange-500": data.isMidterm,
+                      })}
+                    >
+                      {data.isFinal ? "FINAL" : data.isMidterm ? "MIDTERM" : ""}
+                    </span>
+                  </div>
                 </TableCell>
                 <TableCell className="flex items-center gap-2">
                   {data.studentId ? (
@@ -88,18 +100,26 @@ export default function LeaderboardTable({
                     <div className="blur-xs select-none">000000000</div>
                   )}
                   <div className="h-2 w-2 rounded-full bg-green-500"></div>
-                  <span className="text-xs text-muted-foreground">
-                    Synced {data.lastSyncedAt
+                  <span className="text-muted-foreground text-xs">
+                    Synced{" "}
+                    {data.lastSyncedAt
                       ? (() => {
                           const now = new Date();
                           const last = new Date(data.lastSyncedAt);
-                          const diff = Math.floor((now.getTime() - last.getTime()) / 1000);
+                          const diff = Math.floor(
+                            (now.getTime() - last.getTime()) / 1000,
+                          );
                           if (diff < 60) return "now";
-                          if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-                          if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-                          if (diff < 604800) return `${Math.floor(diff / 86400)}d ago`;
-                          if (diff < 2592000) return `${Math.floor(diff / 604800)}w ago`;
-                          if (diff < 31536000) return `${Math.floor(diff / 2592000)}mo ago`;
+                          if (diff < 3600)
+                            return `${Math.floor(diff / 60)}m ago`;
+                          if (diff < 86400)
+                            return `${Math.floor(diff / 3600)}h ago`;
+                          if (diff < 604800)
+                            return `${Math.floor(diff / 86400)}d ago`;
+                          if (diff < 2592000)
+                            return `${Math.floor(diff / 604800)}w ago`;
+                          if (diff < 31536000)
+                            return `${Math.floor(diff / 2592000)}mo ago`;
                           return `${Math.floor(diff / 31536000)}y ago`;
                         })()
                       : null}
@@ -116,7 +136,11 @@ export default function LeaderboardTable({
           })}
         </TableBody>
       </Table>
-      <PaginationControls currentPage={page} maxPages={maxPages} totalRecords={totalRecords} />
+      <PaginationControls
+        currentPage={page}
+        maxPages={maxPages}
+        totalRecords={totalRecords}
+      />
     </div>
   );
 }

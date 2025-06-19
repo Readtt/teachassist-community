@@ -202,7 +202,9 @@ export async function getRankingsData({
           ELSE NULL 
         END`.as("studentId"),
           schoolIdentifier: course.schoolIdentifier,
-          lastSyncedAt: user.lastSyncedAt
+          lastSyncedAt: user.lastSyncedAt,
+          isFinal: course.isFinal,
+          isMidterm: course.isMidterm,
         })
         .from(course)
         .leftJoin(user, eq(course.userId, user.id))
