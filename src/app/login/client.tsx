@@ -24,22 +24,11 @@ import { schoolIdentifierToAcronym, studentIdToEmail } from "~/lib/utils";
 import Logo from "../_components/logo";
 import { doesUserExistByEmail } from "./actions";
 
-const TRUSTED_SCHOOLS = [
-  "Hodan Nalayeh Secondary School",
-  "Thornlea Secondary School",
-  "Thornhill Secondary School",
-  "Tommy Douglas Secondary School",
-  "Maple High School",
-  "Westmount Collegiate Institute",
-  "King City Secondary School",
-  "Markville Secondary School",
-  "Emily Carr Secondary School",
-  "Alexander Mackenzie High School",
-  "Bur Oak Secondary School",
-  "Stephen Lewis Secondary School"
-];
-
-export default function Login() {
+export default function Login({
+  TRUSTED_SCHOOLS,
+}: {
+  TRUSTED_SCHOOLS: string[];
+}) {
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const form = useForm<z.infer<typeof loginSchema>>({
