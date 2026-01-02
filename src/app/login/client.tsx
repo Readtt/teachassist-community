@@ -90,6 +90,12 @@ export default function Login({
     setIsLoading(false);
   }
 
+  const MAX_SCHOOLS_SHOWN = 10;
+  const shownSchools = TRUSTED_SCHOOLS.slice(0, MAX_SCHOOLS_SHOWN);
+  const remainingSchools = Math.max(TRUSTED_SCHOOLS.length - shownSchools.length, 0);
+
+  const GITHUB_URL = "https://github.com/Readtt/teachassist-community";
+
   return (
     <section className="flex h-screen items-center">
       <div className="container">
@@ -108,6 +114,7 @@ export default function Login({
                   </p>
                 </Link>
               </div>
+
               <Form {...form}>
                 <form
                   onSubmit={form.handleSubmit(onSubmit)}
@@ -152,12 +159,31 @@ export default function Login({
                   </Button>
                 </form>
               </Form>
+
+              {/* ✅ GitHub link */}
+              <a
+                href={GITHUB_URL}
+                target="_blank"
+                rel="noreferrer"
+                className="text-muted-foreground hover:text-foreground inline-flex items-center justify-center gap-2 text-xs"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                  className="h-4 w-4"
+                  fill="currentColor"
+                >
+                  <path d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48l-.01-1.69c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.9 1.54 2.36 1.1 2.94.84.09-.65.35-1.1.63-1.35-2.22-.25-4.56-1.11-4.56-4.95 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02A9.56 9.56 0 0 1 12 6.8c.85 0 1.71.11 2.51.33 1.9-1.29 2.74-1.02 2.74-1.02.55 1.38.2 2.4.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.85-2.34 4.7-4.57 4.95.36.31.68.92.68 1.86l-.01 2.75c0 .27.18.58.69.48A10 10 0 0 0 12 2z" />
+                </svg>
+                View on GitHub
+              </a>
+
               <div className="text-muted-foreground space-y-1 text-center text-xs">
                 <p>
                   Trusted by students from {TRUSTED_SCHOOLS.length}+ schools:
                 </p>
                 <div className="mt-2 flex flex-wrap justify-center gap-x-2 gap-y-1">
-                  {TRUSTED_SCHOOLS.map((school, i) => (
+                  {shownSchools.map((school, i) => (
                     <span
                       key={i}
                       className="bg-muted rounded px-2 py-0.5 text-xs"
@@ -165,6 +191,12 @@ export default function Login({
                       {schoolIdentifierToAcronym(school)}
                     </span>
                   ))}
+
+                  {remainingSchools > 0 && (
+                    <span className="bg-muted rounded px-2 py-0.5 text-xs">
+                      +{remainingSchools} more
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
@@ -190,12 +222,6 @@ export default function Login({
               </div>
             </div>
           </div>
-
-          {/* <img
-            src="https://shadcnblocks.com/images/block/placeholder-1.svg"
-            alt="placeholder"
-            className="hidden h-full max-h-screen rounded-md object-cover lg:block"
-          /> */}
         </div>
       </div>
     </section>
