@@ -1,17 +1,41 @@
 # Teachassist Community
 [![Ask DeepWiki](https://devin.ai/assets/askdeepwiki.png)](https://deepwiki.com/Readtt/teachassist-community)
 
-Teachassist Community is an open-source platform designed for students to track their grades from the YRDSB Teachassist portal. It provides powerful features like anonymous leaderboards, class average comparisons, and automated grade syncing, all wrapped in a modern, user-friendly interface.
+Teachassist Community is an open-source platform for **YRDSB Teachassist** students to view their grades in a modern dashboard and compare performance through **anonymous leaderboards** and **course/class averages**.
+
+When you sign in, your Teachassist data is automatically synced and your **current, midterm, and final marks** are kept up to date and reflected across rankings.
 
 ## Key Features
 
--   **Automated Grade Syncing**: Securely connect your Teachassist account to automatically fetch and update your course marks.
--   **Personal Dashboard**: View all your active classes, current grades, and room information at a glance.
--   **Anonymous Leaderboards**: See how you rank against others in your specific class, your entire school, or globally across all users—all completely anonymously.
--   **Comparative Analytics**: View statistics like average grades for a specific course or school.
--   **Advanced Search**: Easily find and explore leaderboards for any course, even those you aren't enrolled in.
--   **Privacy Control**: Choose to appear as anonymous on leaderboards on a per-course basis.
--   **Scheduled Background Jobs**: Utilizes Trigger.dev for automated data syncs to keep data fresh, especially around midterm and final reporting periods.
+- **Auto-Sync on Login**  
+  Your Teachassist grades sync automatically every time you sign in.
+
+- **Modern Grade Dashboard**  
+  See all enrolled courses and your marks displayed cleanly on the home page.
+
+- **Anonymous Leaderboards (Auto Opt-In)**  
+  You’re automatically included in an anonymous leaderboard to compare ranks without exposing identity by default.
+
+- **3 Ranking Modes (Class / School / District)**  
+  Instantly view where you stand across:
+  - **Class** (your specific classroom)
+  - **School** (your whole school)
+  - **District / Global** (across all users / YRDSB)
+
+- **Averages at Every Level**  
+  See course averages for:
+  - your **classroom**
+  - your **school**
+  - the **district/global dataset**
+
+- **Search Across All Courses**  
+  Search and explore all courses currently on the site (even if you’re not enrolled).
+
+- **Homeroom / Classroom Insights**  
+  View averages tied to specific homerooms/classrooms.
+
+- **Leaderboard Privacy Toggle**  
+  Choose whether your **student number** is visible on leaderboards (toggle on/off).
 
 ## Tech Stack
 
