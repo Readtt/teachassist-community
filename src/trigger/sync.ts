@@ -17,7 +17,7 @@ export const syncTask = schedules.task({
         timezone: payload.timezone,
       });
 
-      const cutoffDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000); // 30 days ago
+      const cutoffDate = new Date(Date.now() - 27 * 24 * 60 * 60 * 1000); // 27 days ago
 
       let users;
       try {
