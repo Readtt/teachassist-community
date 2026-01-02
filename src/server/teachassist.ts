@@ -29,35 +29,46 @@ export async function loginTA(
     throw new Error("Invalid student number or password, empty");
 
   const URL = `https://ta.yrdsb.ca/live/index.php?username=${studentId}&password=${password}&submit=Login&subject_id=0`;
+
   const loginResponse = await tryCatch(
-    fetchCookie("https://api.brightdata.com/request", {
+    fetchCookie("https://api.zyte.com/v1/extract", {
       method: "POST",
-      body: JSON.stringify({
-        zone: env.BRIGHT_DATA_ZONE,
-        url: URL,
-        format: "raw",
-        method: "POST",
-      }),
       headers: {
         "content-type": "application/json",
-        authorization: `Bearer ${env.BRIGHT_DATA_TOKEN}`,
+        authorization: `Basic ${Buffer.from(`${env.ZYTE_API_KEY}:`).toString(
+          "base64",
+        )}`,
       },
+      body: JSON.stringify({
+        url: URL,
+        httpResponseBody: true,
+        followRedirect: true,
+        httpRequestMethod: "POST",
+      }),
     }),
   );
 
   if (loginResponse.error) {
-    // 503 error
+    // 503-ish / proxy failure
     throw new Error("Teachassist is currently unavailable");
   }
 
-  const html = await tryCatch(loginResponse.data.text());
-  if (html.error || !html.data.includes("Student Reports")) {
+  const json = await tryCatch(loginResponse.data.json());
+  if (json.error || !(json.data as { httpResponseBody?: string })?.httpResponseBody) {
+    throw new Error("Teachassist is currently unavailable");
+  }
+
+  const html = Buffer.from((json.data as { httpResponseBody?: string }).httpResponseBody!, "base64").toString(
+    "utf8",
+  );
+
+  if (!html.includes("Student Reports")) {
     // 401 error
     throw new Error("Invalid student number or password");
   }
 
   return {
-    html: html.data,
+    html,
   };
 }
 
