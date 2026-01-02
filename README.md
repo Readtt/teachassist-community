@@ -29,7 +29,7 @@ When you sign in, your Teachassist data is automatically synced and your **curre
   - the **district/global dataset**
 
 - **Search Across All Courses**  
-  Search and explore all courses currently on the site (even if you’re not enrolled).
+  Search and explore all courses currently on the site.
 
 - **Homeroom / Classroom Insights**  
   View averages tied to specific homerooms/classrooms.
